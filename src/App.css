@@ -1,0 +1,49 @@
+:root {
+  color-scheme: light;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 3rem 1.5rem;
+  background: #f7f8fb;
+  color: #1f2937;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.app__header {
+  text-align: center;
+}
+
+.app__header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.app__card {
+  width: min(520px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+}
+
+.app__card ul {
+  padding-left: 1.2rem;
+  margin: 0.75rem 0 0;
+}
+
+.app__card li + li {
+  margin-top: 0.5rem;
+}
+
+code {
+  background: #eef2ff;
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  font-family: 'SFMono-Regular', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+}
