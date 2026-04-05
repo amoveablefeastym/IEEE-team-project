@@ -164,6 +164,17 @@ const SESSIONS = [
 
 function StudySessions() {
   const [openSession, setOpenSession] = useState(null)
+  const [query, setQuery] = useState('')
+
+  const filtered = SESSIONS.filter((s) => {
+    const q = query.toLowerCase()
+    return (
+      s.title.toLowerCase().includes(q) ||
+      s.host.toLowerCase().includes(q) ||
+      s.location.toLowerCase().includes(q) ||
+      s.topics.some((t) => t.toLowerCase().includes(q))
+    )
+  })
 
   if (openSession) {
     return <SessionChat session={openSession} onBack={() => setOpenSession(null)} />
@@ -196,10 +207,25 @@ function StudySessions() {
         ))}
       </div>
 
+      {/* Search bar */}
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by title, host, location, or topic..."
+        className="w-full bg-surface border border-line rounded-btn px-4 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-brand"
+      />
+
       {/* Session cards */}
-      {SESSIONS.map((s) => (
-        <SessionCard key={s.id} session={s} onOpen={() => setOpenSession(s)} />
-      ))}
+      {filtered.length > 0 ? (
+        filtered.map((s) => (
+          <SessionCard key={s.id} session={s} onOpen={() => setOpenSession(s)} />
+        ))
+      ) : (
+        <div className="text-center py-12 text-muted text-label">
+          No sessions match "{query}"
+        </div>
+      )}
     </div>
   )
 }
