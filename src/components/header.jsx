@@ -1,26 +1,42 @@
-// Sits at the top of the main content area
-export default function header() {
-    return(
-        <header>
-            <div>
-                <h2>CLASS NAME</h2>
-                <p>Quarter</p>
-            </div>
-            {/**Search and Notification */}
-            <div>
-                <input type="search" placeholder="Search in class..."/>
-                <button>Bell</button>
-            </div>
+export default function Header() {
+  return (
+    <header className="bg-surface border-b border-line px-6 py-3 flex flex-col gap-3">
+      {/* Top row: class info + search + bell */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-primary font-bold text-base leading-tight">CLASS NAME</h2>
+          <p className="text-xxs text-muted">Quarter</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="search"
+            placeholder="Search in class..."
+            className="bg-page border border-line rounded-btn px-3 py-1.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-brand w-56"
+          />
+          <button className="text-muted hover:text-brand text-lg transition-colors" title="Notifications">
+            🔔
+          </button>
+        </div>
+      </div>
 
-            {/**Navigation Tabs */}
-            <nav>
-                <ul>
-                    <li>Chat</li>
-                    <li>Q&A</li>
-                    <li>Study Sessions</li>
-                    <li>Mentorship</li>
-                </ul>
-            </nav>
-        </header>
-    )
+      {/* Tab nav */}
+      <nav>
+        <ul className="flex gap-1">
+          {['Chat', 'Q&A', 'Study Sessions', 'Mentorship'].map((tab) => (
+            <li key={tab}>
+              <button
+                className={`px-4 py-1.5 text-label rounded-btn transition-colors ${
+                  tab === 'Q&A'
+                    ? 'bg-brand text-white font-medium'
+                    : 'text-sub hover:bg-page hover:text-primary'
+                }`}
+              >
+                {tab}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </header>
+  );
 }
