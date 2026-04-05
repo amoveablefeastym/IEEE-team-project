@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import SessionChat from './SessionChat'
+import CreateSessionModal from './CreateSessionModal'
 
 function Tag({ label }) {
   return (
@@ -165,8 +166,29 @@ const SESSIONS = [
 function StudySessions() {
   const [openSession, setOpenSession] = useState(null)
   const [query, setQuery] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+  const [sessions, setSessions] = useState(SESSIONS)
 
-  const filtered = SESSIONS.filter((s) => {
+  function handleCreate({ name, description, participants }) {
+    const newSession = {
+      id: sessions.length + 1,
+      emoji: '📚',
+      title: name,
+      joined: true,
+      host: 'You',
+      attendingCount: participants.length + 1,
+      date: 'TBD',
+      time: 'TBD',
+      location: 'TBD',
+      topics: [],
+      description,
+      attendees: [{ initials: 'UN', name: 'You', color: 'purple' }, ...participants],
+      spotsTotal: 10,
+    }
+    setSessions(prev => [newSession, ...prev])
+  }
+
+  const filtered = sessions.filter((s) => {
     const q = query.toLowerCase()
     return (
       s.title.toLowerCase().includes(q) ||
@@ -182,13 +204,22 @@ function StudySessions() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      {showCreate && (
+        <CreateSessionModal
+          onClose={() => setShowCreate(false)}
+          onCreate={handleCreate}
+        />
+      )}
       {/* Banner */}
       <div className="bg-brand rounded-card p-5 flex items-center justify-between">
         <div>
           <h2 className="text-white font-bold text-xl">Study Sessions</h2>
           <p className="text-brand-light text-label mt-0.5">Schedule and join peer study sessions for this course</p>
         </div>
-        <button className="bg-white text-brand font-semibold text-label px-4 py-2 rounded-btn hover:bg-brand-light transition-colors flex-shrink-0">
+        <button
+          onClick={() => setShowCreate(true)}
+          className="bg-white text-brand font-semibold text-label px-4 py-2 rounded-btn hover:bg-brand-light transition-colors flex-shrink-0"
+        >
           + Create Session
         </button>
       </div>
