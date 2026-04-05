@@ -32,8 +32,12 @@ function SessionCard({ session, onOpen }) {
 
   return (
     <div
-      className="bg-surface rounded-card border border-line overflow-hidden cursor-pointer hover:border-brand hover:shadow-sm transition-all"
-      onClick={onOpen}
+      className={`bg-surface rounded-card border border-line overflow-hidden transition-all ${
+        joined
+          ? 'cursor-pointer hover:border-brand hover:shadow-sm'
+          : 'opacity-60 cursor-not-allowed'
+      }`}
+      onClick={joined ? onOpen : undefined}
     >
       {/* Card header */}
       <div className="bg-brand p-4 flex items-start justify-between">
@@ -107,7 +111,10 @@ function SessionCard({ session, onOpen }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xxs text-muted">{spotsFilled}/{spotsTotal} spots</span>
-          <span className="text-xxs text-brand font-medium">Open chat →</span>
+          {joined
+            ? <span className="text-xxs text-brand font-medium">Open chat →</span>
+            : <span className="text-xxs text-muted">🔒 Members only</span>
+          }
         </div>
       </div>
     </div>
