@@ -1,84 +1,81 @@
 function Tag({ label }) {
-  return <span className="tag">#{label}</span>;
+  return (
+    <span className="inline-block bg-brand-light text-brand text-xxs font-medium px-2 py-0.5 rounded-badge">
+      #{label}
+    </span>
+  );
 }
 
-function Question({ author, title, text, time, tags, replies, votes }) {
+function Question({ author, role, title, text, time, tags, replies, votes }) {
   return (
-    <div className="question">
-      <div className="question-content">{title}
-        <div className="question-header">
-          {author} • {role}
-        </div>
-        <h1>{title}</h1>
-        <p>{text}</p>
+    <div className="bg-surface rounded-card border border-line p-4 flex gap-4">
+      {/* Vote column */}
+      <div className="flex flex-col items-center gap-1 text-muted text-sm min-w-[32px]">
+        <button className="hover:text-brand">⬆</button>
+        <span className="text-primary font-medium">{votes}</span>
+        <button className="hover:text-brand">⬇</button>
+      </div>
 
-        <div className="question-tags">
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-label text-sub">{author} • {role}</span>
+          <span className="text-xxs text-muted">{time}</span>
+        </div>
+        <h3 className="text-primary font-semibold mb-1">{title}</h3>
+        <p className="text-sub text-sm mb-3">{text}</p>
+
+        <div className="flex flex-wrap gap-1 mb-2">
           {tags.map((t) => (
             <Tag key={t} label={t} />
           ))}
         </div>
 
-        <div className="question-replies">
-          View {replies} replies
-        </div>
-
-        <div className="question-votes">
-          <div>⬆</div>
-          {votes}
-          <div>⬇</div>
-        </div>
+        <span className="text-xxs text-muted">View {replies} replies</span>
       </div>
-      <div className="question-time">{time}</div>
     </div>
   );
 }
 
 function QAndA() {
   return (
-    <div className="q-and-a">
+    <div className="flex-1 overflow-y-auto p-6 space-y-4">
       {/* Course header */}
-      <div className="course-header">
-        <h1>CS214 - Data Structures and Algorithms</h1>
-        <p>
-          <span className="answered">4 Answered</span> |
-          <span className="unanswered"> 1 Unanswered Questions</span>
-        </p>
-        <button className="add-question">+ Ask a Question</button>
-
+      <div className="bg-surface rounded-card border border-line p-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-primary font-bold text-lg">CS214 - Data Structures and Algorithms</h2>
+          <p className="text-label text-sub mt-0.5">
+            <span className="text-brand font-medium">4 Answered</span>
+            <span className="mx-1 text-muted">|</span>
+            <span>1 Unanswered</span>
+          </p>
+        </div>
+        <button className="bg-brand hover:bg-brand-hover text-white text-label font-medium px-4 py-2 rounded-btn transition-colors">
+          + Ask a Question
+        </button>
       </div>
 
       {/* Search bar */}
-      <div className="search-bar">
-        <input type="text" placeholder="Search questions by topic, keyword, or author..." />
+      <input
+        type="text"
+        placeholder="Search questions by topic, keyword, or author..."
+        className="w-full bg-surface border border-line rounded-btn px-4 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-brand"
+      />
+
+      {/* Filter buttons */}
+      <div className="flex gap-2">
+        <button className="bg-brand text-white text-label px-3 py-1.5 rounded-btn">All</button>
+        <button className="bg-surface border border-line text-sub text-label px-3 py-1.5 rounded-btn hover:border-brand hover:text-brand transition-colors">Open Questions</button>
+        <button className="bg-surface border border-line text-sub text-label px-3 py-1.5 rounded-btn hover:border-brand hover:text-brand transition-colors">My Questions</button>
       </div>
 
-      {/* Filter options */}
-      <div className="filter-options">
-        <button className="filter-btn">All</button>
-        <button className="filter-btn">Open Questions</button>
-        <button className="filter-btn">My Questions</button>
-      </div>
-
-      {/* Tag options */}
-      <div className="tag-options">
-        <button className="tag-btn">
-          <Tag label="loops" />
-        </button>
-        <button className="tag-btn">
-          <Tag label="conditionals" />
-        </button>
-        <button className="tag-btn">
-          <Tag label="functions" />
-        </button>
-        <button className="tag-btn">
-          <Tag label="arrays" />
-        </button>
-        <button className="tag-btn">
-          <Tag label="objects" />
-        </button>
-        <button className="tag-btn">
-          <Tag label="recursion" />
-        </button>
+      {/* Tag filters */}
+      <div className="flex flex-wrap gap-2">
+        {['loops', 'conditionals', 'functions', 'arrays', 'objects', 'recursion'].map((tag) => (
+          <button key={tag}>
+            <Tag label={tag} />
+          </button>
+        ))}
       </div>
 
       {/* Questions */}
