@@ -169,7 +169,7 @@ function StudySessions() {
   const [showCreate, setShowCreate] = useState(false)
   const [sessions, setSessions] = useState(SESSIONS)
 
-  function handleCreate({ name, description, participants }) {
+  function handleCreate({ name, description, participants, date, time, location, topics }) {
     const newSession = {
       id: sessions.length + 1,
       emoji: '📚',
@@ -177,10 +177,10 @@ function StudySessions() {
       joined: true,
       host: 'You',
       attendingCount: participants.length + 1,
-      date: 'TBD',
-      time: 'TBD',
-      location: 'TBD',
-      topics: [],
+      date,
+      time,
+      location,
+      topics,
       description,
       attendees: [{ initials: 'UN', name: 'You', color: 'purple' }, ...participants],
       spotsTotal: 10,

@@ -28,11 +28,29 @@ function Avatar({ initials, color, size = 'md' }) {
 }
 
 export default function CreateSessionModal({ onClose, onCreate }) {
-  const [name, setName]               = useState('')
-  const [description, setDescription] = useState('')
+  const [name, setName]                 = useState('')
+  const [description, setDescription]   = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [selected, setSelected]       = useState([])
-  const [tab, setTab]                 = useState('create')
+  const [selected, setSelected]         = useState([])
+  const [date, setDate]                 = useState('')
+  const [startTime, setStartTime]       = useState('')
+  const [endTime, setEndTime]           = useState('')
+  const [location, setLocation]         = useState('')
+  const [topicInput, setTopicInput]     = useState('')
+  const [topics, setTopics]             = useState([])
+
+  function addTopic(e) {
+    if (e.key === 'Enter' && topicInput.trim()) {
+      e.preventDefault()
+      const t = topicInput.trim().toLowerCase().replace(/\s+/g, '_')
+      if (!topics.includes(t)) setTopics(prev => [...prev, t])
+      setTopicInput('')
+    }
+  }
+
+  function removeTopic(t) {
+    setTopics(prev => prev.filter(x => x !== t))
+  }
 
   function toggleMember(member) {
     setSelected(prev =>
@@ -44,7 +62,9 @@ export default function CreateSessionModal({ onClose, onCreate }) {
 
   function handleCreate() {
     if (!name.trim()) return
-    onCreate({ name, description, participants: selected })
+    const formattedDate = date ? new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : 'TBD'
+    const formattedTime = startTime && endTime ? `${startTime} – ${endTime}` : 'TBD'
+    onCreate({ name, description, participants: selected, date: formattedDate, time: formattedTime, location: location || 'TBD', topics })
     onClose()
   }
 
@@ -139,14 +159,83 @@ export default function CreateSessionModal({ onClose, onCreate }) {
             )}
           </div>
 
+          {/* Date & Time */}
+          <div className="px-4 mt-5">
+            <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">🕐 Date &amp; Time</p>
+            <div className="bg-surface rounded-card border border-line overflow-hidden divide-y divide-line">
+              <div className="flex items-center px-4 py-2.5 gap-3">
+                <span className="text-muted text-sm w-16 flex-shrink-0">Date</span>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="flex-1 text-sm text-primary bg-transparent focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center px-4 py-2.5 gap-3">
+                <span className="text-muted text-sm w-16 flex-shrink-0">Start</span>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={e => setStartTime(e.target.value)}
+                  className="flex-1 text-sm text-primary bg-transparent focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center px-4 py-2.5 gap-3">
+                <span className="text-muted text-sm w-16 flex-shrink-0">End</span>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={e => setEndTime(e.target.value)}
+                  className="flex-1 text-sm text-primary bg-transparent focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="px-4 mt-5">
+            <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">📍 Location</p>
+            <input
+              type="text"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              placeholder="e.g. Tech LG52 – Study Lounge"
+              className="w-full bg-surface border border-line rounded-card px-4 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-brand"
+            />
+          </div>
+
+          {/* Topics (optional) */}
+          <div className="px-4 mt-5">
+            <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">🏷 Topics <span className="normal-case font-normal">(optional)</span></p>
+            <input
+              type="text"
+              value={topicInput}
+              onChange={e => setTopicInput(e.target.value)}
+              onKeyDown={addTopic}
+              placeholder="Type a topic and press Enter..."
+              className="w-full bg-surface border border-line rounded-card px-4 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-brand"
+            />
+            {topics.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {topics.map(t => (
+                  <span key={t} className="flex items-center gap-1 bg-brand-light text-brand text-xxs font-medium px-2 py-0.5 rounded-badge">
+                    #{t}
+                    <button onClick={() => removeTopic(t)} className="hover:text-brand-hover leading-none">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Description */}
           <div className="px-4 mt-5 pb-4">
             <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">Description</p>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Pull an all-nighter in Mudd to grind Graphs for the upcoming midterms 2"
-              rows={4}
+              placeholder="What will you be working on?"
+              rows={3}
               className="w-full bg-surface border border-line rounded-card px-4 py-3 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-brand resize-none"
             />
           </div>
