@@ -1,4 +1,4 @@
-export default function Header() {
+export default function Header({ activeTab, onTabChange }) {
   return (
     <header className="bg-surface border-b border-line px-6 py-3 flex flex-col gap-3">
       {/* Top row: class info + search + bell */}
@@ -25,8 +25,9 @@ export default function Header() {
           {['Chat', 'Q&A', 'Study Sessions', 'Mentorship'].map((tab) => (
             <li key={tab}>
               <button
+                onClick={() => onTabChange(tab)}
                 className={`px-4 py-1.5 text-label rounded-btn transition-colors ${
-                  tab === 'Q&A'
+                  activeTab === tab
                     ? 'bg-brand text-white font-medium'
                     : 'text-sub hover:bg-page hover:text-primary'
                 }`}
