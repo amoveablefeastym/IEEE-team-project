@@ -1,34 +1,42 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import Sidebar from './components/sidebar'
+import Header from './components/header'
+import RightSidebar from './components/rightsidebar'
+import QAndA from './QAPage'
+import ChatPage from './chat'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [showUpperclassmen, setShowUpperclassmen] = useState(false)
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <BrowserRouter>
+      <div className="flex h-screen bg-gray-100 overflow-hidden">
+        <Sidebar />
+        <div className="flex flex-col flex-1 min-w-0">
+          <Header showUpperclassmen={showUpperclassmen} onToggleUpperclassmen={setShowUpperclassmen} />
+          {/* main has no padding — each page controls its own layout */}
+          <main className="flex-1 overflow-hidden flex flex-col">
+            <Routes>
+              <Route path="/" element={<Navigate to="/chat" replace />} />
+              <Route path="/qa"   element={<div className="flex-1 overflow-y-auto p-6"><QAndA /></div>} />
+              <Route path="/chat" element={<ChatPage showUpperclassmen={showUpperclassmen} />} />
+              <Route path="/study"       element={<Placeholder label="Study Sessions" />} />
+              <Route path="/mentorship"  element={<Placeholder label="Mentorship" />} />
+            </Routes>
+          </main>
+        </div>
+        <RightSidebar />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </BrowserRouter>
+  )
+}
+
+function Placeholder({ label }: { label: string }) {
+  return (
+    <div className="flex-1 flex items-center justify-center">
+      <p className="text-sm text-gray-400">{label} — coming soon</p>
+    </div>
   )
 }
 
