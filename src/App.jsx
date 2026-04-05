@@ -1,25 +1,25 @@
-import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import SignUp from './pages/SignUp'
+import SignIn from './pages/SignIn'
 
-function App() {
+// Existing page imports — keep whatever the team already has
+// import App from './App'  ← replace this file, don't self-import
+// Add other routes below as the team builds them out
+
+export default function App() {
   return (
-    <div className="app">
-      <header className="app__header">
-        <h1>IEEE Web</h1>
-        <p>Vite + React is ready.</p>
-      </header>
-      <section className="app__card">
-        <h2>Next steps</h2>
-        <ul>
-          <li>
-            Edit <code>src/App.jsx</code> to get started.
-          </li>
-          <li>
-            Run <code>npm install</code> and <code>npm run dev</code>.
-          </li>
-        </ul>
-      </section>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/"        element={<SignUp />} />
+        <Route path="/signup"  element={<SignUp />} />
+        <Route path="/signin"  element={<SignIn />} />
+        {/* 
+          Future routes — add as pages are built:
+          <Route path="/dashboard"  element={<Dashboard />} />
+          <Route path="/class/:id"  element={<ClassView />} />
+          <Route path="/settings"   element={<Settings />} />
+        */}
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App
