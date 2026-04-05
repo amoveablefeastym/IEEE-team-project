@@ -152,26 +152,21 @@ export default function CreateSessionModal({ onClose, onCreate }) {
           </div>
         </div>
 
-        {/* Bottom tab nav */}
-        <div className="bg-surface border-t border-line">
-          <div className="flex">
-            {[
-              { id: 'my',     label: 'My groups',    icon: '👥' },
-              { id: 'all',    label: 'All groups',   icon: '👨‍👩‍👧‍👦' },
-              { id: 'create', label: 'Create group', icon: '➕' },
-            ].map(t => (
-              <button
-                key={t.id}
-                onClick={() => t.id === 'create' ? handleCreate() : setTab(t.id)}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 text-xxs font-medium transition-colors ${
-                  tab === t.id ? 'text-brand' : 'text-muted hover:text-sub'
-                }`}
-              >
-                <span className="text-xl">{t.icon}</span>
-                {t.label}
-              </button>
-            ))}
-          </div>
+        {/* Bottom actions */}
+        <div className="bg-surface border-t border-line flex">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 text-label font-semibold text-muted hover:text-primary transition-colors border-r border-line"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={!name.trim()}
+            className="flex-1 py-3 text-label font-semibold text-brand hover:text-brand-hover disabled:opacity-40 transition-colors"
+          >
+            Create
+          </button>
         </div>
 
       </div>
