@@ -1,6 +1,4 @@
-import { useRef } from 'react';
-
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
 
 function Tag({ label }) {
   return (
@@ -13,14 +11,12 @@ function Tag({ label }) {
 function Question({ author, role, title, text, time, tags, replies, votes }) {
   return (
     <div className="bg-surface rounded-card border border-line p-4 flex gap-4">
-      {/* Vote column */}
       <div className="flex flex-col items-center gap-1 text-muted text-sm min-w-[32px]">
         <button className="hover:text-brand">⬆</button>
         <span className="text-primary font-medium">{votes}</span>
         <button className="hover:text-brand">⬇</button>
       </div>
 
-      {/* Main content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <span className="text-label text-sub">{author} • {role}</span>
@@ -40,7 +36,13 @@ function Question({ author, role, title, text, time, tags, replies, votes }) {
     </div>
   );
 }
-const scrollRef = useRef(null);
+
+function QAndA() {
+  const scrollRef = useRef(null);
+  const [showModal, setShowModal] = useState(false);
+  const [questionTitle, setQuestionTitle] = useState('');
+  const [questionBody, setQuestionBody] = useState('');
+
   const scrollAmount = 320;
 
   const scrollUp = () => {
@@ -51,10 +53,20 @@ const scrollRef = useRef(null);
     scrollRef.current?.scrollBy({ top: scrollAmount, left: 0, behavior: 'smooth' });
   };
 
+  const openModal = () => setShowModal(true);
+  const closeModal = () => setShowModal(false);
+
+  const submitQuestion = (event) => {
+    event.preventDefault();
+    console.log('Question submitted:', { questionTitle, questionBody });
+    setQuestionTitle('');
+    setQuestionBody('');
+    setShowModal(false);
+  };
+
   return (
     <div className="relative flex-1 overflow-hidden p-6">
       <div ref={scrollRef} className="h-full overflow-y-auto pr-2 space-y-4">
-        {/* Course header */}
         <div className="bg-surface rounded-card border border-line p-4 flex items-center justify-between">
           <div>
             <h2 className="text-primary font-bold text-lg">CS214 - Data Structures and Algorithms</h2>
@@ -64,26 +76,26 @@ const scrollRef = useRef(null);
               <span>1 Unanswered</span>
             </p>
           </div>
-          <button className="bg-brand hover:bg-brand-hover text-white text-label font-medium px-4 py-2 rounded-btn transition-colors">
+          <button
+            onClick={openModal}
+            className="bg-brand hover:bg-brand-hover text-white text-label font-medium px-4 py-2 rounded-btn transition-colors"
+          >
             + Ask a Question
           </button>
         </div>
 
-        {/* Search bar */}
         <input
           type="text"
           placeholder="Search questions by topic, keyword, or author..."
           className="w-full bg-surface border border-line rounded-btn px-4 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-brand"
         />
 
-        {/* Filter buttons */}
         <div className="flex gap-2">
           <button className="bg-brand text-white text-label px-3 py-1.5 rounded-btn">All</button>
           <button className="bg-surface border border-line text-sub text-label px-3 py-1.5 rounded-btn hover:border-brand hover:text-brand transition-colors">Open Questions</button>
           <button className="bg-surface border border-line text-sub text-label px-3 py-1.5 rounded-btn hover:border-brand hover:text-brand transition-colors">My Questions</button>
         </div>
 
-        {/* Tag filters */}
         <div className="flex flex-wrap gap-2">
           {['loops', 'conditionals', 'functions', 'arrays', 'objects', 'recursion'].map((tag) => (
             <button key={tag}>
@@ -92,7 +104,6 @@ const scrollRef = useRef(null);
           ))}
         </div>
 
-        {/* Questions */}
         <Question
           author="M. Smith"
           role="Student"
@@ -130,39 +141,61 @@ const scrollRef = useRef(null);
         >
           ▼
         </button>
-      </div   time="2 hours ago"
-          tags={['loops', 'logic', 'A3']}
-          replies={12}
-          votes={23}
-        />
-        <Question
-          author="Jordan Lee"
-          role="Student"
-          title="Difference between pass by value and pass by reference?"
-          text="I'm confused about what happens when you modify parameters inside a function. Can someone explain with examples?"
-          time="5 hours ago"
-          tags={['midterm_review', 'functions', 'concepts']}
-          replies={18}
-          votes={45}
-        />
       </div>
 
-      <div className="pointer-events-none absolute right-4 top-1/2 flex flex-col gap-2 -translate-y-1/2">
-        <button
-          onClick={scrollUp}
-          aria-label="Scroll up"
-          className="pointer-events-auto rounded-full bg-surface border border-line p-3 text-primary shadow-sm hover:bg-brand hover:text-white transition-colors"
-        >
-          ▲
-        </button>
-        <button
-          onClick={scrollDown}
-          aria-label="Scroll down"
-          className="pointer-events-auto rounded-full bg-surface border border-line p-3 text-primary shadow-sm hover:bg-brand hover:text-white transition-colors"
-        >
-          ▼
-        </button>
-      </div>
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+          <div className="w-full max-w-lg rounded-card bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-primary">Ask a Question</h3>
+              <button
+                onClick={closeModal}
+                className="text-muted hover:text-primary"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={submitQuestion} className="space-y-4">
+              <label className="block text-sm font-medium text-sub">
+                Title
+                <input
+                  value={questionTitle}
+                  onChange={(e) => setQuestionTitle(e.target.value)}
+                  className="mt-2 w-full rounded-btn border border-line bg-surface px-3 py-2 text-sm text-primary focus:border-brand focus:outline-none"
+                  placeholder="Enter your question title"
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-sub">
+                Details
+                <textarea
+                  value={questionBody}
+                  onChange={(e) => setQuestionBody(e.target.value)}
+                  className="mt-2 w-full rounded-btn border border-line bg-surface px-3 py-2 text-sm text-primary focus:border-brand focus:outline-none"
+                  placeholder="Add more context or details..."
+                  rows={5}
+                  required
+                />
+              </label>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="rounded-btn border border-line px-4 py-2 text-sm text-sub hover:border-brand hover:text-brand"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-btn bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
