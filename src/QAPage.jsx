@@ -1,5 +1,7 @@
 import { useRef } from 'react';
 
+import { useRef } from 'react';
+
 function Tag({ label }) {
   return (
     <span className="inline-block bg-brand-light text-brand text-xxs font-medium px-2 py-0.5 rounded-badge">
@@ -38,9 +40,7 @@ function Question({ author, role, title, text, time, tags, replies, votes }) {
     </div>
   );
 }
-
-function QAndA() {
-  const scrollRef = useRef(null);
+const scrollRef = useRef(null);
   const scrollAmount = 320;
 
   const scrollUp = () => {
@@ -99,6 +99,38 @@ function QAndA() {
           title="Help needed on Assignment 3"
           text="I'm trying to implement a while loop, but it keeps running forever. Can someone help me figure out what's wrong?"
           time="2 hours ago"
+          tags={['loops', 'logic', 'A3']}
+          replies={12}
+          votes={23}
+        />
+        <Question
+          author="Jordan Lee"
+          role="Student"
+          title="Difference between pass by value and pass by reference?"
+          text="I'm confused about what happens when you modify parameters inside a function. Can someone explain with examples?"
+          time="5 hours ago"
+          tags={['midterm_review', 'functions', 'concepts']}
+          replies={18}
+          votes={45}
+        />
+      </div>
+
+      <div className="pointer-events-none absolute right-4 top-1/2 flex flex-col gap-2 -translate-y-1/2">
+        <button
+          onClick={scrollUp}
+          aria-label="Scroll up"
+          className="pointer-events-auto rounded-full bg-surface border border-line p-3 text-primary shadow-sm hover:bg-brand hover:text-white transition-colors"
+        >
+          ▲
+        </button>
+        <button
+          onClick={scrollDown}
+          aria-label="Scroll down"
+          className="pointer-events-auto rounded-full bg-surface border border-line p-3 text-primary shadow-sm hover:bg-brand hover:text-white transition-colors"
+        >
+          ▼
+        </button>
+      </div   time="2 hours ago"
           tags={['loops', 'logic', 'A3']}
           replies={12}
           votes={23}
