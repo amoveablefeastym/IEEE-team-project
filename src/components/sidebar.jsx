@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom'
+
 export default function Sidebar() {
+  const navigate = useNavigate()
   return (
     <aside className="w-60 min-h-screen bg-surface border-r border-line flex flex-col">
       {/* Logo */}
@@ -23,7 +26,13 @@ export default function Sidebar() {
       <nav className="px-3 pt-5">
         <div className="flex items-center justify-between px-2 mb-1">
           <p className="text-xxs text-muted font-semibold uppercase tracking-widest">My Classes</p>
-          <button className="text-muted hover:text-brand text-base leading-none transition-colors">+</button>
+          <button
+            onClick={() => navigate('/discover')}
+            className="text-muted hover:text-brand text-base leading-none transition-colors"
+            title="Discover courses"
+          >
+            +
+          </button>
         </div>
         <ul className="space-y-0.5">
           <li className="px-2 py-1.5 rounded-btn text-label text-primary bg-brand-light font-medium cursor-pointer">
