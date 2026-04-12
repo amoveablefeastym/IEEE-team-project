@@ -1,8 +1,15 @@
+import { useState } from 'react';
 import './App.css'
+import CourseDiscovery from "./CourseDiscovery";
 
 function App() {
+  const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
+
   return (
     <div className="app">
+      <button onClick={() => setIsDiscoveryOpen(true)}>Open Courses</button>
+
+      {isDiscoveryOpen && <CourseDiscovery onClose={() => setIsDiscoveryOpen(false)} />}
       <header className="app__header">
         <h1>IEEE Web</h1>
         <p>Vite + React is ready.</p>

@@ -8,9 +8,9 @@ export default function CourseDiscovery({ onClose }) {
       <div className="bg-white w-[700px] max-h-[80vh] overflow-y-auto rounded-2xl shadow-xl p-6" style={{ scrollbarGutter: 'stable' }}>
         
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between mb-4 text-left">
           <div>
-            <h2 className="text-xl font-semibold">Course Discovery</h2>
+            <h2 className="text-xl font-extrabold m-0">Course Discovery</h2>
             <p className="text-sm text-gray-500">
               Find and add courses to your schedule
             </p>
@@ -25,7 +25,7 @@ export default function CourseDiscovery({ onClose }) {
             placeholder="Search by course name, code, or professor"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 border rounded-lg px-4 py-2"
+            className="flex-1 border-2 rounded-lg px-4 py-2"
           />
         </div>
 
@@ -74,17 +74,17 @@ function CourseCard({ course }) {
     <div className="border rounded-xl p-4 flex justify-between items-center mb-3">
       <div style={{ textAlign: 'left' }}>
       <h3>
-        <span className="font-semibold">{course.code}</span>
-        <span className="ml-2 text-gray-700">{course.name}</span>
+        <span className="text-lg font-bold">{course.code}</span>
+        <span className="ml-2 text-gray-700 font-medium">{course.name}</span>
       </h3>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-400 font-medium">
         {course.prof}
       </p>
-      <p className="text-sm text-gray-600 mt-1">
+      <p className="text-sm text-gray-600 mt-1 font-medium">
         {course.description}
       </p>
       </div>
-      <button className="border border-blue-500 text-blue-500 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">
+      <button className="border-2 border-blue-500 text-blue-500 px-4 py-2 rounded-lg whitespace-nowrap shrink-0 shadow-md">
         + Add
       </button>
     </div>
