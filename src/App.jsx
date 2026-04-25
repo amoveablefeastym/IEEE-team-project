@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Header from './components/header';
@@ -8,7 +8,6 @@ import RightSidebar from './components/rightsidebar';
 import QAndA from './QAPage';
 import ChatPage from './chat';
 import CourseDiscovery from './CourseDiscovery';
-import { useNavigate } from 'react-router-dom';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -20,7 +19,7 @@ function ProtectedRoute({ children }) {
 
 function Dashboard() {
   const [showUpperclassmen, setShowUpperclassmen] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div className="flex bg-gray-50 h-screen overflow-hidden">
