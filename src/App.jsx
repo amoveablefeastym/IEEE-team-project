@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+import SignIn from './pages/SignIn';
 import Header from './components/header';
 import Sidebar from './components/sidebar';
 import RightSidebar from './components/rightsidebar';
@@ -50,12 +52,14 @@ function Placeholder({ label }) {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/signin" element={<SignIn />} />
           <Route
             path="/*"
             element={
@@ -69,5 +73,3 @@ function App() {
     </AuthProvider>
   );
 }
-
-export default App;
