@@ -1,58 +1,51 @@
-// Right sidebar shows class members and mentors
-
 export default function RightSidebar() {
-    return(
-        <aside className="w-72 bg-white border-l h-screen p-6 flex flex-col gap-8 hidden lg:flex overflow-y-auto">
-            
-            <div>
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-sm font-semibold text-gray-800">Class Members (124)</h3>
-                </div>
-
-                {/**Class Members */}
-                <ul className="space-y-4">
-                    <li className="flex items-center gap-3 cursor-pointer group">
-                        <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 font-bold flex items-center justify-center text-sm shadow-sm group-hover:ring-2 ring-purple-300">A</div>
-                        <div>
-                            <p className="text-sm font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">Alex Chen</p>
-                            <p className="text-xs text-gray-500">Junior • CS</p>
-                        </div>
-                    </li>
-                    <li className="flex items-center gap-3 cursor-pointer group">
-                        <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center text-sm shadow-sm group-hover:ring-2 ring-amber-300">C</div>
-                        <div>
-                            <p className="text-sm font-semibold text-gray-800 group-hover:text-amber-600 transition-colors">Chris Smith</p>
-                            <p className="text-xs text-gray-500">Freshman • EE</p>
-                        </div>
-                    </li>
-                </ul>
+  return (
+    <aside className="w-56 min-h-screen bg-surface border-l border-line flex flex-col gap-4 p-4">
+      {/* Class Members */}
+      <div>
+        <h3 className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">Class Members</h3>
+        <ul className="space-y-2">
+          <li className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-avatar bg-brand-light text-brand text-xxs font-bold flex items-center justify-center flex-shrink-0">
+              A
             </div>
-
-            <div>
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-sm font-semibold text-gray-800">Upperclassmen Mentors</h3>
-                    <a href="#" className="text-xs text-purple-600 font-medium hover:underline">View All</a>
-                </div>
-
-                {/**Mentor placeholder */}
-                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100 mb-3 cursor-pointer hover:bg-gray-100">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 font-bold flex items-center justify-center text-sm">M</div>
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-gray-800">Maria Garcia</p>
-                        <p className="text-xs text-gray-500">Senior • CS</p>
-                    </div>
-                </div>
+            <div className="min-w-0">
+              <p className="text-label text-primary font-medium truncate">Member Name</p>
+              <p className="text-xxs text-muted truncate">Year • Major</p>
             </div>
+          </li>
+        </ul>
+      </div>
 
-            {/**Mentor Banner */}
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-xl border border-purple-100 mt-auto shadow-sm">
-                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                    Become a Mentor!
-                </h4>
-                <p className="text-xs text-gray-600 mb-4 leading-relaxed">Share your knowledge and help your peers succeed in this class.</p>
-                <button className="w-full text-sm font-semibold bg-white text-purple-600 border border-purple-200 py-2 rounded-lg hover:bg-purple-50 transition-colors shadow-sm">Learn More</button>
-            </div>
+      {/* Upperclassmen Mentors */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xxs text-muted font-semibold uppercase tracking-widest">Upperclassmen Mentors</h3>
+          <a href="#" className="text-xxs text-brand hover:underline">View All</a>
+        </div>
 
-        </aside>
-    )
+        <div className="flex items-center gap-2 bg-page rounded-card p-2">
+          <div className="w-7 h-7 rounded-avatar bg-star text-white text-xxs font-bold flex items-center justify-center flex-shrink-0">
+            A
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-label text-primary font-medium truncate">Mentor Name</p>
+            <p className="text-xxs text-muted truncate">Year • Major</p>
+          </div>
+          <button className="text-xxs text-brand border border-brand rounded-btn px-2 py-1 hover:bg-brand-light transition-colors flex-shrink-0">
+            Message
+          </button>
+        </div>
+      </div>
+
+      {/* Become a Mentor banner */}
+      <div className="mt-auto bg-brand-light rounded-card p-3">
+        <h4 className="text-label text-brand font-semibold mb-1">Become a Mentor!</h4>
+        <p className="text-xxs text-sub mb-2">Share your knowledge and help your peers succeed in this class.</p>
+        <button className="w-full bg-brand hover:bg-brand-hover text-white text-xxs font-medium py-1.5 rounded-btn transition-colors">
+          Learn More
+        </button>
+      </div>
+    </aside>
+  );
 }

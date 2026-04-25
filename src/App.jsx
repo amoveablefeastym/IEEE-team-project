@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Header from './components/header';
@@ -7,6 +7,7 @@ import Sidebar from './components/sidebar';
 import RightSidebar from './components/rightsidebar';
 import QAndA from './QAPage';
 import ChatPage from './chat';
+import CourseDiscovery from './CourseDiscovery';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ function ProtectedRoute({ children }) {
 
 function Dashboard() {
   const [showUpperclassmen, setShowUpperclassmen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="flex bg-gray-50 h-screen overflow-hidden">
@@ -29,6 +31,7 @@ function Dashboard() {
             <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route path="/qa" element={<div className="flex-1 overflow-y-auto w-full"><QAndA /></div>} />
             <Route path="/chat" element={<ChatPage showUpperclassmen={showUpperclassmen} />} />
+            <Route path="/discover" element={<CourseDiscovery onClose={() => navigate(-1)} />} />
             <Route path="/study" element={<Placeholder label="Study Sessions" />} />
             <Route path="/mentorship" element={<Placeholder label="Mentorship" />} />
           </Routes>

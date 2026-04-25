@@ -1,20 +1,15 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --color-purple-50: #fdfcff;
-  --color-purple-100: #f5f0fa;
-  --color-purple-200: #e5dcf2;
-  --color-purple-300: #9C89BA;
-  --color-purple-400: #9C89BA;
-  --color-purple-500: #5B3B8C;
-  --color-purple-600: #5B3B8C;
-  --color-purple-700: #362354;
-  --color-purple-800: #362354;
-  --color-purple-900: #281742;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-:root {
+body {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  background-color: #F3F4F6;
+  color: #111827;
 }
