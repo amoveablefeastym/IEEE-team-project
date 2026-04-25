@@ -167,9 +167,16 @@ function StudySessions() {
   const [openSession, setOpenSession] = useState(null)
   const [query, setQuery] = useState('')
   const [showCreate, setShowCreate] = useState(false)
-  const [sessions, setSessions] = useState(SESSIONS)
+  const [sessions, setSessions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('classhub-sessions')
+      return saved ? JSON.parse(saved) : SESSIONS
+    } catch {
+      return SESSIONS
+    }
+  })
 
-  function handleCreate({ name, description, participants }) {
+  function handleCreate({ name, description, participants, date, time, location, topics }) {
     const newSession = {
       id: sessions.length + 1,
       emoji: '📚',
@@ -177,15 +184,19 @@ function StudySessions() {
       joined: true,
       host: 'You',
       attendingCount: participants.length + 1,
-      date: 'TBD',
-      time: 'TBD',
-      location: 'TBD',
-      topics: [],
+      date,
+      time,
+      location,
+      topics,
       description,
       attendees: [{ initials: 'UN', name: 'You', color: 'purple' }, ...participants],
       spotsTotal: 10,
     }
-    setSessions(prev => [newSession, ...prev])
+    setSessions(prev => {
+      const updated = [newSession, ...prev]
+      localStorage.setItem('classhub-sessions', JSON.stringify(updated))
+      return updated
+    })
   }
 
   const filtered = sessions.filter((s) => {
