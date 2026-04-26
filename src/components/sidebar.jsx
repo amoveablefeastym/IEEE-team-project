@@ -26,7 +26,12 @@ export default function Sidebar() {
       <nav className="px-3 pt-4">
         <p className="text-xxs text-muted font-semibold uppercase tracking-widest px-2 mb-1">Main</p>
         <ul className="space-y-0.5">
-          <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">
+          <li
+            onClick={() => navigate('/dashboard')}
+            className={`px-2 py-1.5 rounded-btn text-label cursor-pointer transition-colors ${
+              location.pathname === '/dashboard' ? 'bg-brand/10 text-brand' : 'text-sub hover:bg-page hover:text-primary'
+            }`}
+          >
             Dashboard
           </li>
           <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">
@@ -48,7 +53,12 @@ export default function Sidebar() {
           </button>
         </div>
         <ul className="space-y-0.5">
-          <li className="px-2 py-1.5 rounded-btn text-label text-primary bg-brand-light font-medium cursor-pointer">
+          <li
+            onClick={() => navigate('/chat')}
+            className={`px-2 py-1.5 rounded-btn text-label cursor-pointer transition-colors ${
+              ['/chat', '/qa', '/study', '/mentorship'].includes(location.pathname) ? 'bg-brand/10 text-brand' : 'text-sub hover:bg-page hover:text-primary'
+            }`}
+          >
             Class One
           </li>
           <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">

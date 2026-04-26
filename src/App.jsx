@@ -11,6 +11,7 @@ import QAndA from './QAPage';
 import ChatPage from './chat';
 import CourseDiscovery from './CourseDiscovery';
 import StudySessions from './StudySessionsPage';
+import DashboardOverview from './DashboardOverview';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -34,7 +35,8 @@ function Dashboard() {
           <Header showUpperclassmen={showUpperclassmen} onToggleUpperclassmen={setShowUpperclassmen} />
           <main className="flex-1 overflow-hidden flex flex-col">
             <Routes location={background || location}>
-              <Route path="/" element={<Navigate to="/chat" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardOverview />} />
               <Route path="/qa" element={<div className="flex-1 overflow-y-auto w-full"><QAndA /></div>} />
               <Route path="/chat" element={<ChatPage showUpperclassmen={showUpperclassmen} />} />
               <Route path="/study" element={<StudySessions />} />
