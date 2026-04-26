@@ -8,7 +8,7 @@ function Tag({ label, isActive }) {
   );
 }
 
-function Question({ author, role, title, text, time, tags, replies, votes }) {
+function Question({ author, role, title, text, time, tags, replies, votes, isForUpperclassmen }) {
   const [currentVotes, setCurrentVotes] = useState(votes);
   const [userVote, setUserVote] = useState(null);
   const [expanded, setExpanded] = useState(false);
@@ -47,7 +47,17 @@ function Question({ author, role, title, text, time, tags, replies, votes }) {
             <span className="text-label text-sub">{author} • {role}</span>
             <span className="text-xxs text-muted">{time}</span>
           </div>
-          <h3 className="text-primary font-semibold mb-1 cursor-pointer hover:text-brand" onClick={() => setExpanded(!expanded)}>{title}</h3>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-primary font-semibold cursor-pointer hover:text-brand" onClick={() => setExpanded(!expanded)}>
+              {isForUpperclassmen && (
+                <span className="inline-flex items-center gap-1 bg-brand text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded mr-2 align-middle" title="Question directed to Upperclassmen">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0z"></path></svg>
+                  Upperclassmen
+                </span>
+              )}
+              {title}
+            </h3>
+          </div>
           <p className="text-sub text-sm mb-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>{text}</p>
 
           <div className="flex flex-wrap gap-1 mb-2">
@@ -81,6 +91,7 @@ function QAndA() {
   const [showModal, setShowModal] = useState(false);
   const [questionTitle, setQuestionTitle] = useState('');
   const [questionBody, setQuestionBody] = useState('');
+  const [askUpperclassmen, setAskUpperclassmen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeTopic, setActiveTopic] = useState(null);
 
@@ -99,9 +110,10 @@ function QAndA() {
 
   const submitQuestion = (event) => {
     event.preventDefault();
-    console.log('Question submitted:', { questionTitle, questionBody });
+    console.log('Question submitted:', { questionTitle, questionBody, askUpperclassmen });
     setQuestionTitle('');
     setQuestionBody('');
+    setAskUpperclassmen(false);
     setShowModal(false);
   };
 
@@ -173,6 +185,7 @@ function QAndA() {
           tags={['loops', 'logic', 'A3']}
           replies={12}
           votes={23}
+          isForUpperclassmen={true}
         />
         <Question
           author="Jordan Lee"
@@ -237,6 +250,17 @@ function QAndA() {
                   required
                 />
               </label>
+              
+              <label className="flex items-center gap-2 mt-2 cursor-pointer bg-brand-light p-3 rounded-lg border border-brand/20">
+                <input 
+                  type="checkbox" 
+                  checked={askUpperclassmen}
+                  onChange={(e) => setAskUpperclassmen(e.target.checked)}
+                  className="accent-brand w-4 h-4 cursor-pointer"
+                />
+                <span className="text-sm font-medium text-brand">Direct this question to Upperclassmen / Alumni</span>
+              </label>
+
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
