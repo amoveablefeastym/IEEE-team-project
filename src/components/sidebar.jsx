@@ -34,9 +34,6 @@ export default function Sidebar() {
           >
             Dashboard
           </li>
-          <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">
-            Academics
-          </li>
         </ul>
       </nav>
 
@@ -66,19 +63,6 @@ export default function Sidebar() {
           </li>
           <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">
             Class Three
-          </li>
-        </ul>
-      </nav>
-
-      {/* Community */}
-      <nav className="px-3 pt-5">
-        <p className="text-xxs text-muted font-semibold uppercase tracking-widest px-2 mb-1">Community</p>
-        <ul className="space-y-0.5">
-          <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">
-            Student Groups
-          </li>
-          <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">
-            Settings
           </li>
         </ul>
       </nav>
