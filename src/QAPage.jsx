@@ -1,38 +1,77 @@
 import { useState, useRef } from 'react';
 
-function Tag({ label }) {
+function Tag({ label, isActive }) {
   return (
-    <span className="inline-block bg-brand-light text-brand text-xxs font-medium px-2 py-0.5 rounded-badge">
+    <span className={`inline-block text-xxs font-medium px-2 py-0.5 rounded-badge transition-colors ${isActive ? 'bg-brand text-white' : 'bg-brand-light text-brand hover:bg-brand/20'}`}>
       #{label}
     </span>
   );
 }
 
 function Question({ author, role, title, text, time, tags, replies, votes }) {
+  const [currentVotes, setCurrentVotes] = useState(votes);
+  const [userVote, setUserVote] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+
+  const handleVote = (type) => {
+    if (userVote === type) {
+      setCurrentVotes(votes);
+      setUserVote(null);
+    } else {
+      setCurrentVotes(type === 'up' ? votes + 1 : votes - 1);
+      setUserVote(type);
+    }
+  };
+
   return (
-    <div className="bg-surface rounded-card border border-line p-4 flex gap-4">
-      <div className="flex flex-col items-center gap-1 text-muted text-sm min-w-[32px]">
-        <button className="hover:text-brand">⬆</button>
-        <span className="text-primary font-medium">{votes}</span>
-        <button className="hover:text-brand">⬇</button>
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-label text-sub">{author} • {role}</span>
-          <span className="text-xxs text-muted">{time}</span>
-        </div>
-        <h3 className="text-primary font-semibold mb-1">{title}</h3>
-        <p className="text-sub text-sm mb-3">{text}</p>
-
-        <div className="flex flex-wrap gap-1 mb-2">
-          {tags.map((t) => (
-            <Tag key={t} label={t} />
-          ))}
+    <div className="bg-surface rounded-card border border-line p-4 flex flex-col gap-4">
+      <div className="flex gap-4">
+        <div className="flex flex-col items-center justify-start gap-1 text-muted text-sm min-w-[32px]">
+          <button 
+            onClick={() => handleVote('up')} 
+            className={`transition-colors ${userVote === 'up' ? 'text-brand font-bold' : 'hover:text-brand'}`}
+          >
+            ⬆
+          </button>
+          <span className={`font-medium ${userVote ? 'text-brand' : 'text-primary'}`}>{currentVotes}</span>
+          <button 
+            onClick={() => handleVote('down')} 
+            className={`transition-colors ${userVote === 'down' ? 'text-red-500 font-bold' : 'hover:text-red-500'}`}
+          >
+            ⬇
+          </button>
         </div>
 
-        <span className="text-xxs text-muted">View {replies} replies</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-label text-sub">{author} • {role}</span>
+            <span className="text-xxs text-muted">{time}</span>
+          </div>
+          <h3 className="text-primary font-semibold mb-1 cursor-pointer hover:text-brand" onClick={() => setExpanded(!expanded)}>{title}</h3>
+          <p className="text-sub text-sm mb-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>{text}</p>
+
+          <div className="flex flex-wrap gap-1 mb-2">
+            {tags.map((t) => (
+              <Tag key={t} label={t} />
+            ))}
+          </div>
+
+          <button 
+            onClick={() => setExpanded(!expanded)}
+            className="text-xxs text-muted hover:text-brand font-semibold transition-colors"
+          >
+            {expanded ? 'Hide replies' : `View ${replies} replies`}
+          </button>
+        </div>
       </div>
+      
+      {expanded && (
+        <div className="ml-12 pl-4 border-l-2 border-line space-y-3 mt-2">
+          <button className="text-xs font-semibold text-brand hover:text-brand-hover bg-brand/5 px-3 py-1.5 rounded-lg w-full text-left transition-colors">
+            + Add a reply...
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -42,6 +81,8 @@ function QAndA() {
   const [showModal, setShowModal] = useState(false);
   const [questionTitle, setQuestionTitle] = useState('');
   const [questionBody, setQuestionBody] = useState('');
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [activeTopic, setActiveTopic] = useState(null);
 
   const scrollAmount = 320;
 
@@ -91,15 +132,34 @@ function QAndA() {
         />
 
         <div className="flex gap-2">
-          <button className="bg-brand text-white text-label px-3 py-1.5 rounded-btn">All</button>
-          <button className="bg-surface border border-line text-sub text-label px-3 py-1.5 rounded-btn hover:border-brand hover:text-brand transition-colors">Open Questions</button>
-          <button className="bg-surface border border-line text-sub text-label px-3 py-1.5 rounded-btn hover:border-brand hover:text-brand transition-colors">My Questions</button>
+          <button 
+            onClick={() => setActiveFilter('All')} 
+            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'All' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
+          >
+            All
+          </button>
+          <button 
+            onClick={() => setActiveFilter('Open Questions')} 
+            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'Open Questions' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
+          >
+            Open Questions
+          </button>
+          <button 
+            onClick={() => setActiveFilter('My Questions')} 
+            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'My Questions' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
+          >
+            My Questions
+          </button>
         </div>
 
         <div className="flex flex-wrap gap-2">
           {['loops', 'conditionals', 'functions', 'arrays', 'objects', 'recursion'].map((tag) => (
-            <button key={tag}>
-              <Tag label={tag} />
+            <button 
+              key={tag} 
+              onClick={() => setActiveTopic(activeTopic === tag ? null : tag)} 
+              className="transition-transform active:scale-95"
+            >
+              <Tag label={tag} isActive={activeTopic === tag} />
             </button>
           ))}
         </div>
@@ -123,16 +183,6 @@ function QAndA() {
           tags={['midterm_review', 'functions', 'concepts']}
           replies={18}
           votes={45}
-        />
-        <Question
-          author="Prof. Davis"
-          role="Instructor"
-          title="Update on Midterm Grades"
-          text="The midterm grades have been posted to the canvas page. The class average was 82%. Please come to office hours if you have any questions."
-          time="1 day ago"
-          tags={['announcement', 'midterm', 'grades']}
-          replies={34}
-          votes={105}
         />
       </div>
 
