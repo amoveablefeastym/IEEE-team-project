@@ -184,16 +184,6 @@ function QAndA() {
           replies={18}
           votes={45}
         />
-        <Question
-          author="Prof. Davis"
-          role="Instructor"
-          title="Update on Midterm Grades"
-          text="The midterm grades have been posted to the canvas page. The class average was 82%. Please come to office hours if you have any questions."
-          time="1 day ago"
-          tags={['announcement', 'midterm', 'grades']}
-          replies={34}
-          votes={105}
-        />
       </div>
 
       <div className="pointer-events-none absolute right-4 top-1/2 flex flex-col gap-2 -translate-y-1/2">
