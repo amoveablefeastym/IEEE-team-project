@@ -10,6 +10,7 @@ import RightSidebar from './components/rightsidebar';
 import QAndA from './QAPage';
 import ChatPage from './chat';
 import CourseDiscovery from './CourseDiscovery';
+import StudySessions from './StudySessionsPage';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -36,7 +37,7 @@ function Dashboard() {
               <Route path="/" element={<Navigate to="/chat" replace />} />
               <Route path="/qa" element={<div className="flex-1 overflow-y-auto w-full"><QAndA /></div>} />
               <Route path="/chat" element={<ChatPage showUpperclassmen={showUpperclassmen} />} />
-              <Route path="/study" element={<Placeholder label="Study Sessions" />} />
+              <Route path="/study" element={<StudySessions />} />
               <Route path="/mentorship" element={<Placeholder label="Mentorship" />} />
             </Routes>
           </main>

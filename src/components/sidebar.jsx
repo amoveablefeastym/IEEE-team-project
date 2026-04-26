@@ -1,8 +1,20 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user, logout } = useAuth()
+  
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/login')
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   return (
     <aside className="w-60 min-h-screen bg-surface border-r border-line flex flex-col">
       {/* Logo */}
@@ -67,10 +79,10 @@ export default function Sidebar() {
           UN
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-label text-primary font-medium truncate">Name</p>
-          <p className="text-xxs text-muted truncate">Major • Grade</p>
+          <p className="text-label text-primary font-medium truncate">{user?.displayName || 'Name'}</p>
+          <p className="text-xxs text-muted truncate">Student</p>
         </div>
-        <button className="text-muted hover:text-brand text-sm transition-colors" title="Log out">
+        <button onClick={handleLogout} className="text-muted hover:text-brand text-sm transition-colors" title="Log out">
           ↩
         </button>
       </div>
