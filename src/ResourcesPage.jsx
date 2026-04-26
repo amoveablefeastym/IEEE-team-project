@@ -1,0 +1,183 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from './context/AuthContext';
+import { db, storage } from './firebase';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+export default function ResourcesPage() {
+  const [resources, setResources] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState(null);
+  const [description, setDescription] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const q = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const resourcesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setResources(resourcesData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPendingFile(file);
+      setIsModalOpen(true);
+    }
+    // reset input value so the same file could be selected again if needed
+    e.target.value = null;
+  };
+
+  const handleUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (pendingFile && user) {
+      setIsUploading(true);
+      try {
+        const fileRef = ref(storage, `resources/${Date.now()}_${pendingFile.name}`);
+        const snapshot = await uploadBytes(fileRef, pendingFile);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        await addDoc(collection(db, 'resources'), {
+          name: pendingFile.name,
+          type: pendingFile.type || 'File',
+          description: description,
+          uploader: user.displayName || 'Anonymous',
+          size: (pendingFile.size / 1024 / 1024).toFixed(2) + ' MB',
+          url: downloadURL,
+          createdAt: serverTimestamp(),
+        });
+
+        handleCloseModal();
+      } catch (error) {
+        console.error("Error uploading file: ", error);
+        alert("Failed to upload file. Please try again.");
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setPendingFile(null);
+    setDescription('');
+    setIsUploading(false);
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-8 bg-page h-full relative">
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* Header Section */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold text-primary mb-2">Study Resources</h1>
+            <p className="text-sub">Share and access notes, previous exams, and study guides.</p>
+          </div>
+          
+          <div>
+            <label className="cursor-pointer bg-brand hover:bg-brand-hover text-white px-4 py-2 rounded-lg font-medium transition-colors inline-block">
+              Upload File
+              <input 
+                type="file" 
+                className="hidden" 
+                onChange={handleFileSelect} 
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Resources List */}
+        <div className="bg-surface border border-line rounded-xl overflow-hidden">
+          <div className="divide-y divide-line">
+            {resources.map((resource) => (
+              <div key={resource.id} className="p-4 flex items-center justify-between hover:bg-page transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded bg-brand/10 text-brand flex flex-shrink-0 items-center justify-center font-bold text-xs uppercase">
+                    {resource.name.split('.').pop().substring(0, 3)}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary truncate max-w-xs sm:max-w-sm md:max-w-md">{resource.name}</h3>
+                    {resource.description && (
+                      <p className="text-sm font-medium text-sub mt-0.5">{resource.description}</p>
+                    )}
+                    <p className="text-xs text-muted mt-1">
+                      Uploaded by <span className="font-medium text-primary">{resource.uploader}</span> • {resource.createdAt ? new Date(resource.createdAt.toDate()).toLocaleDateString() : 'Just now'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <span className="text-xs text-muted hidden sm:inline-block">{resource.size}</span>
+                  <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-hover font-semibold text-sm bg-brand/5 px-3 py-1.5 rounded-lg transition-colors inline-block">
+                    Download
+                  </a>
+                </div>
+              </div>
+            ))}
+            {resources.length === 0 && (
+              <div className="p-8 text-center text-sub">
+                No resources available. Be the first to upload!
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Upload Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-surface rounded-2xl max-w-md w-full p-6 shadow-xl border border-line">
+            <h2 className="text-xl font-bold text-primary mb-1">File Details</h2>
+            <p className="text-sm text-sub mb-4">Add a description for your file before uploading.</p>
+            
+            <form onSubmit={handleUploadSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-primary mb-1">File</label>
+                <div className="px-3 py-2 bg-page border border-line rounded-lg text-sm text-sub break-all">
+                  {pendingFile?.name}
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-primary mb-1">Description</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="e.g. Midterm study guide covering chapters 1-4..."
+                  className="w-full px-3 py-2 bg-page border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand min-h-[80px]"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  disabled={isUploading}
+                  className="px-4 py-2 text-sm font-medium text-sub hover:text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand hover:bg-brand-hover text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+                  disabled={!description.trim() || isUploading}
+                >
+                  {isUploading ? 'Uploading...' : 'Upload File'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
