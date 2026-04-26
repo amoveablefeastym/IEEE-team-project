@@ -1,21 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom'
 
 export default function CourseDiscovery({ onClose }) {
   const [search, setSearch] = useState("");
+  const navigate = useNavigate()
+
+  // fallback close handler if parent doesn't provide one
+  const close = onClose || (() => {
+    // try to go back in history; fall back to home
+    if (window.history.length > 1) navigate(-1)
+    else navigate('/')
+  })
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') close()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [close])
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white w-[700px] max-h-[80vh] overflow-y-auto rounded-2xl shadow-xl p-6" style={{ scrollbarGutter: 'stable' }}>
+    <div className="modal-overlay" onClick={close}>
+      <div className="modal bg-white w-[700px] max-h-[80vh] overflow-y-auto rounded-2xl shadow-xl p-6"
+            style={{ scrollbarGutter: 'stable' }}
+            onClick={(e) => e.stopPropagation()}
+      >
+        
         
         {/* Header */}
-        <div className="flex justify-between mb-4 text-left">
+        <div className="flex justify-between mb-4 text-left items-center">
           <div>
-            <h2 className="text-xl font-extrabold m-0">Course Discovery</h2>
-            <p className="text-sm text-gray-500">
-              Find and add courses to your schedule
-            </p>
+            <h2>Course Discovery</h2>
+            <p>Find and add courses to your schedule</p>
           </div>
-          <button onClick={onClose}>✕</button>
+          <button onClick={close}>✕</button>
         </div>
 
         {/* Search */}
@@ -84,7 +103,9 @@ function CourseCard({ course }) {
         {course.description}
       </p>
       </div>
-      <button className="border-2 border-blue-500 text-blue-500 px-4 py-2 rounded-lg whitespace-nowrap shrink-0 shadow-md">
+      <button onClick={() => console.log("Added", course.id)}
+              className="border-2 border-blue-500 text-blue-500 px-4 py-2 rounded-lg whitespace-nowrap shrink-0 shadow-md"
+      >
         + Add
       </button>
     </div>
