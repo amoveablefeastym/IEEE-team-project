@@ -86,7 +86,7 @@ function Question({ author, role, title, text, time, tags, replies, votes, isFor
   );
 }
 
-function QAndA() {
+function QAndA({ isMentorView = false }) {
   const scrollRef = useRef(null);
   const [showModal, setShowModal] = useState(false);
   const [questionTitle, setQuestionTitle] = useState('');
@@ -117,24 +117,85 @@ function QAndA() {
     setShowModal(false);
   };
 
+  // Mock data for the two different views
+  const normalQuestions = [
+    {
+      id: 1,
+      author: "M. Smith",
+      role: "Student",
+      title: "Help needed on Assignment 3",
+      text: "I'm trying to implement a while loop, but it keeps running forever. Can someone help me figure out what's wrong?",
+      time: "2 hours ago",
+      tags: ['loops', 'logic', 'A3'],
+      replies: 12,
+      votes: 23,
+      isForUpperclassmen: true
+    },
+    {
+      id: 2,
+      author: "Jordan Lee",
+      role: "Student",
+      title: "Difference between pass by value and pass by reference?",
+      text: "I'm confused about what happens when you modify parameters inside a function. Can someone explain with examples?",
+      time: "5 hours ago",
+      tags: ['midterm_review', 'functions', 'concepts'],
+      replies: 18,
+      votes: 45,
+      isForUpperclassmen: false
+    }
+  ];
+
+  const mentorQuestions = [
+    {
+      id: 3,
+      author: "Freshman Alex",
+      role: "Student",
+      title: "How to prepare for the CS 111 Final?",
+      text: "What are the common mistakes people make on this final? Is it mostly coding or multiple choice?",
+      time: "1 hour ago",
+      tags: ['exam_prep', 'general'],
+      replies: 0,
+      votes: 5,
+      isForUpperclassmen: true
+    },
+    {
+      id: 4,
+      author: "Katie S.",
+      role: "Student",
+      title: "Are structs heavily tested?",
+      text: "We just learned structs yesterday, I'm worried they'll be a massive part of the quiz on friday.",
+      time: "4 hours ago",
+      tags: ['structs', 'quiz'],
+      replies: 2,
+      votes: 11,
+      isForUpperclassmen: true
+    }
+  ];
+
+  const displayedQuestions = isMentorView ? mentorQuestions : normalQuestions;
+
   return (
     <div className="relative flex-1 overflow-hidden p-6">
       <div ref={scrollRef} className="h-full overflow-y-auto pr-2 space-y-4">
         <div className="bg-surface rounded-card border border-line p-4 flex items-center justify-between">
           <div>
-            <h2 className="text-primary font-bold text-lg">CS214 - Data Structures and Algorithms</h2>
+            <h2 className="text-primary font-bold text-lg">
+              {isMentorView ? 'Questions for Upperclassmen in CS 111' : 'CS214 - Data Structures and Algorithms'}
+            </h2>
             <p className="text-label text-sub mt-0.5">
-              <span className="text-brand font-medium">4 Answered</span>
+              <span className="text-brand font-medium">{isMentorView ? '2 Answered' : '4 Answered'}</span>
               <span className="mx-1 text-muted">|</span>
               <span>1 Unanswered</span>
             </p>
           </div>
-          <button
-            onClick={openModal}
-            className="bg-brand hover:bg-brand-hover text-white text-label font-medium px-4 py-2 rounded-btn transition-colors"
-          >
-            + Ask a Question
-          </button>
+          {!isMentorView && (
+            <button
+              onClick={openModal}
+              className="bg-brand hover:bg-brand-hover text-white text-label font-medium px-4 py-2 rounded-btn transition-colors"
+            >
+              + Ask a Question
+            </button>
+          )}
         </div>
 
         <input
@@ -151,21 +212,15 @@ function QAndA() {
             All
           </button>
           <button 
-            onClick={() => setActiveFilter('Open Questions')} 
-            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'Open Questions' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
+            onClick={() => setActiveFilter('Questions I Answered')} 
+            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'Questions I Answered' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
           >
-            Open Questions
-          </button>
-          <button 
-            onClick={() => setActiveFilter('My Questions')} 
-            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'My Questions' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
-          >
-            My Questions
+            Questions I Answered
           </button>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {['loops', 'conditionals', 'functions', 'arrays', 'objects', 'recursion'].map((tag) => (
+          {(isMentorView ? ['exam_prep', 'general', 'structs', 'quiz'] : ['loops', 'conditionals', 'functions', 'arrays', 'objects', 'recursion']).map((tag) => (
             <button 
               key={tag} 
               onClick={() => setActiveTopic(activeTopic === tag ? null : tag)} 
@@ -176,27 +231,20 @@ function QAndA() {
           ))}
         </div>
 
-        <Question
-          author="M. Smith"
-          role="Student"
-          title="Help needed on Assignment 3"
-          text="I'm trying to implement a while loop, but it keeps running forever. Can someone help me figure out what's wrong?"
-          time="2 hours ago"
-          tags={['loops', 'logic', 'A3']}
-          replies={12}
-          votes={23}
-          isForUpperclassmen={true}
-        />
-        <Question
-          author="Jordan Lee"
-          role="Student"
-          title="Difference between pass by value and pass by reference?"
-          text="I'm confused about what happens when you modify parameters inside a function. Can someone explain with examples?"
-          time="5 hours ago"
-          tags={['midterm_review', 'functions', 'concepts']}
-          replies={18}
-          votes={45}
-        />
+        {displayedQuestions.map((q) => (
+          <Question
+            key={q.id}
+            author={q.author}
+            role={q.role}
+            title={q.title}
+            text={q.text}
+            time={q.time}
+            tags={q.tags}
+            replies={q.replies}
+            votes={q.votes}
+            isForUpperclassmen={q.isForUpperclassmen}
+          />
+        ))}
       </div>
 
       <div className="pointer-events-none absolute right-4 top-1/2 flex flex-col gap-2 -translate-y-1/2">
