@@ -4,11 +4,15 @@ import { db, storage } from './firebase';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+const RESOURCE_TAGS = ['Notes', 'Past Exams', 'Study Guides', 'Other'];
+
 export default function ResourcesPage() {
   const [resources, setResources] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState(null);
   const [description, setDescription] = useState('');
+  const [tag, setTag] = useState('Notes');
+  const [filterTag, setFilterTag] = useState('All');
   const [isUploading, setIsUploading] = useState(false);
   const { user } = useAuth();
 
@@ -47,6 +51,7 @@ export default function ResourcesPage() {
           name: pendingFile.name,
           type: pendingFile.type || 'File',
           description: description,
+          tag: tag,
           uploader: user.displayName || 'Anonymous',
           size: (pendingFile.size / 1024 / 1024).toFixed(2) + ' MB',
           url: downloadURL,
@@ -67,8 +72,13 @@ export default function ResourcesPage() {
     setIsModalOpen(false);
     setPendingFile(null);
     setDescription('');
+    setTag('Notes');
     setIsUploading(false);
   };
+
+  const displayedResources = filterTag === 'All' 
+    ? resources 
+    : resources.filter(r => r.tag === filterTag);
 
   return (
     <div className="flex-1 overflow-y-auto p-8 bg-page h-full relative">
@@ -93,19 +103,45 @@ export default function ResourcesPage() {
           </div>
         </div>
 
+        {/* Filter Bar */}
+        <div className="flex gap-2 border-b border-line pb-4 overflow-x-auto">
+          <button 
+            onClick={() => setFilterTag('All')}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${filterTag === 'All' ? 'bg-brand text-white' : 'bg-surface text-sub border border-line hover:bg-page'}`}
+          >
+            All Resources
+          </button>
+          {RESOURCE_TAGS.map(t => (
+            <button 
+              key={t}
+              onClick={() => setFilterTag(t)}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors border border-line ${filterTag === t ? 'bg-brand text-white border-transparent' : 'bg-surface text-sub hover:bg-page'}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
         {/* Resources List */}
         <div className="bg-surface border border-line rounded-xl overflow-hidden">
           <div className="divide-y divide-line">
-            {resources.map((resource) => (
+            {displayedResources.map((resource) => (
               <div key={resource.id} className="p-4 flex items-center justify-between hover:bg-page transition-colors">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded bg-brand/10 text-brand flex flex-shrink-0 items-center justify-center font-bold text-xs uppercase">
                     {resource.name.split('.').pop().substring(0, 3)}
                   </div>
                   <div>
-                    <h3 className="font-bold text-primary truncate max-w-xs sm:max-w-sm md:max-w-md">{resource.name}</h3>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="font-bold text-primary truncate max-w-xs sm:max-w-sm md:max-w-md">{resource.name}</h3>
+                      {resource.tag && (
+                        <span className="bg-brand/10 text-brand text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded">
+                          {resource.tag}
+                        </span>
+                      )}
+                    </div>
                     {resource.description && (
-                      <p className="text-sm font-medium text-sub mt-0.5">{resource.description}</p>
+                      <p className="text-sm font-medium text-sub mb-0.5">{resource.description}</p>
                     )}
                     <p className="text-xs text-muted mt-1">
                       Uploaded by <span className="font-medium text-primary">{resource.uploader}</span> • {resource.createdAt ? new Date(resource.createdAt.toDate()).toLocaleDateString() : 'Just now'}
@@ -121,9 +157,9 @@ export default function ResourcesPage() {
                 </div>
               </div>
             ))}
-            {resources.length === 0 && (
+            {displayedResources.length === 0 && (
               <div className="p-8 text-center text-sub">
-                No resources available. Be the first to upload!
+                No resources available.
               </div>
             )}
           </div>
@@ -144,6 +180,19 @@ export default function ResourcesPage() {
                 <div className="px-3 py-2 bg-page border border-line rounded-lg text-sm text-sub break-all">
                   {pendingFile?.name}
                 </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-primary mb-1">Resource Type</label>
+                <select
+                  value={tag}
+                  onChange={(e) => setTag(e.target.value)}
+                  className="w-full px-3 py-2 bg-page border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand text-primary font-medium"
+                >
+                  {RESOURCE_TAGS.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
               </div>
               
               <div className="mb-6">
