@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from './context/AuthContext'
+import { subscribeToClassMessages, sendClassMessage, sendClassReply } from './services/firestore'
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
@@ -332,6 +334,7 @@ function Message({ msg, depth, onAddReply, onExpand, onDelete }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ChatPage({ showUpperclassmen = false }) {
+  const { user } = useAuth()
   const [threads, setThreads] = useState(SEED_THREADS)
   const [message, setMessage] = useState('')
   const [anonymous, setAnonymous] = useState(false)
@@ -339,6 +342,41 @@ export default function ChatPage({ showUpperclassmen = false }) {
   const visibleThreads = showUpperclassmen
     ? threads.filter((t) => t.badge === 'Previously Took Course')
     : threads
+  useEffect(() => {
+    let unsub = null
+    try {
+      unsub = subscribeToClassMessages((msgs) => {
+        // map firestore shape to UI shape
+        const mapped = msgs.map((m) => ({
+          id: m.id,
+          text: m.text,
+          anonymous: m.anonymous,
+          author: m.authorName || (m.initials ? m.initials : 'Unknown'),
+          initials: m.initials || (m.authorName ? m.authorName.split(' ').map(n=>n[0]).join('').slice(0,2) : 'UN'),
+          avatarBg: m.avatarBg || '#E5E7EB',
+          avatarColor: m.avatarColor || '#374151',
+          badge: m.badge || (m.previousTaker ? 'Previously Took Course' : null),
+          time: m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          replies: (m.replies || []).map((r) => ({
+            id: r.id,
+            text: r.text,
+            anonymous: r.anonymous,
+            author: r.authorName || 'Unknown',
+            time: r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          })),
+          hiddenCount: 0,
+        }))
+        setThreads(mapped)
+      })
+    } catch (e) {
+      // Firestore not available or permission denied — keep seed threads
+      console.warn('Firestore subscribe failed, using local seed threads', e)
+    }
+
+    return () => {
+      if (unsub) unsub()
+    }
+  }, [])
 
   function handleDelete(id) {
     setThreads((prev) => deleteMessage(prev, id))
@@ -346,34 +384,57 @@ export default function ChatPage({ showUpperclassmen = false }) {
 
   function handleSend() {
     if (!message.trim()) return
-    const newMsg = {
-      id: nextId++,
-      isOwn: true,
-      ...(anonymous
-        ? { anonymous: true, avatarBg: '#E5E7EB', badge: 'Anonymous' }
-        : { author: 'Jane Doe', initials: 'JD', avatarBg: '#7C3AED', avatarColor: '#FFFFFF' }),
-      time: now(),
+    // persist to Firestore if available
+    const payload = {
       text: message.trim(),
-      replies: [],
-      hiddenCount: 0,
+      anonymous,
+      authorName: user?.displayName || 'Anonymous',
+      authorId: user?.uid || null,
+      initials: user?.displayName ? user.displayName.split(' ').map(n=>n[0]).join('').slice(0,2) : 'AN',
+      avatarBg: '#7C3AED',
     }
-    setThreads((prev) => [...prev, newMsg])
+    sendClassMessage(payload).catch((e) => {
+      console.warn('sendClassMessage failed, falling back to local', e)
+      const newMsg = {
+        id: nextId++,
+        isOwn: true,
+        ...(anonymous
+          ? { anonymous: true, avatarBg: '#E5E7EB', badge: 'Anonymous' }
+          : { author: 'Jane Doe', initials: 'JD', avatarBg: '#7C3AED', avatarColor: '#FFFFFF' }),
+        time: now(),
+        text: message.trim(),
+        replies: [],
+        hiddenCount: 0,
+      }
+      setThreads((prev) => [...prev, newMsg])
+    })
     setMessage('')
   }
 
   function handleAddReply(parentId, text) {
-    const newReply = {
-      id: nextId++,
-      isOwn: true,
-      ...(anonymous
-        ? { anonymous: true, avatarBg: '#E5E7EB', badge: 'Anonymous' }
-        : { author: 'Jane Doe', initials: 'JD', avatarBg: '#7C3AED', avatarColor: '#FFFFFF' }),
-      time: now(),
+    const payload = {
       text,
-      replies: [],
-      hiddenCount: 0,
+      anonymous,
+      authorName: user?.displayName || 'Anonymous',
+      authorId: user?.uid || null,
+      initials: user?.displayName ? user.displayName.split(' ').map(n=>n[0]).join('').slice(0,2) : 'AN',
+      avatarBg: '#7C3AED',
     }
-    setThreads((prev) => appendReply(prev, parentId, newReply))
+    sendClassReply(parentId, payload).catch((e) => {
+      console.warn('sendClassReply failed, falling back to local', e)
+      const newReply = {
+        id: nextId++,
+        isOwn: true,
+        ...(anonymous
+          ? { anonymous: true, avatarBg: '#E5E7EB', badge: 'Anonymous' }
+          : { author: 'Jane Doe', initials: 'JD', avatarBg: '#7C3AED', avatarColor: '#FFFFFF' }),
+        time: now(),
+        text,
+        replies: [],
+        hiddenCount: 0,
+      }
+      setThreads((prev) => appendReply(prev, parentId, newReply))
+    })
   }
 
   function handleExpand(msgId) {

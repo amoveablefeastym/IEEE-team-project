@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useAuth } from './context/AuthContext';
+import { subscribeToQuestions, postQuestion } from './services/firestore';
 
 function Tag({ label, isActive }) {
   return (
@@ -88,12 +90,14 @@ function Question({ author, role, title, text, time, tags, replies, votes, isFor
 
 function QAndA({ isMentorView = false }) {
   const scrollRef = useRef(null);
+  const { user } = useAuth()
   const [showModal, setShowModal] = useState(false);
   const [questionTitle, setQuestionTitle] = useState('');
   const [questionBody, setQuestionBody] = useState('');
   const [askUpperclassmen, setAskUpperclassmen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeTopic, setActiveTopic] = useState(null);
+  const [questions, setQuestions] = useState([])
 
   const scrollAmount = 320;
 
@@ -110,11 +114,27 @@ function QAndA({ isMentorView = false }) {
 
   const submitQuestion = (event) => {
     event.preventDefault();
-    console.log('Question submitted:', { questionTitle, questionBody, askUpperclassmen });
-    setQuestionTitle('');
-    setQuestionBody('');
-    setAskUpperclassmen(false);
-    setShowModal(false);
+    // Persist to Firestore
+    postQuestion({
+      title: questionTitle,
+      text: questionBody,
+      authorName: user?.displayName || 'Anonymous',
+      authorId: user?.uid || null,
+      isForUpperclassmen: askUpperclassmen,
+      tags: activeTopic ? [activeTopic] : [],
+    }).then(() => {
+      setQuestionTitle('')
+      setQuestionBody('')
+      setAskUpperclassmen(false)
+      setShowModal(false)
+    }).catch((e) => {
+      console.error('postQuestion failed', e)
+      // fallback local behavior
+      setQuestionTitle('')
+      setQuestionBody('')
+      setAskUpperclassmen(false)
+      setShowModal(false)
+    })
   };
 
   // Mock data for the two different views
@@ -172,7 +192,14 @@ function QAndA({ isMentorView = false }) {
     }
   ];
 
-  const displayedQuestions = isMentorView ? mentorQuestions : normalQuestions;
+  useEffect(() => {
+    const unsub = subscribeToQuestions((items) => {
+      setQuestions(items)
+    })
+    return () => unsub()
+  }, [])
+
+  const displayedQuestions = isMentorView ? questions.filter(q => q.isForUpperclassmen) : questions
 
   return (
     <div className="relative flex-1 overflow-hidden p-6">

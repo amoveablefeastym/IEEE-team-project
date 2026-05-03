@@ -1,71 +1,77 @@
-Firebase setup (quickstart) — local + production
+## Firebase setup (Web) — project configuration
 
-This document walks through setting up Cloud Firestore and Storage for local development and production.
+Copy this snippet into your project to initialize Firebase and Cloud Firestore (modular SDK v9+ / v12 style).
 
-1) Console: create project
-- Open https://console.firebase.google.com/ and create/select your `ieee-studyspace` project.
+Replace any values only if they differ in your Firebase Console. For this repository the project configuration is already filled below.
 
-2) Enable Firestore
-- Build -> Firestore Database -> Create database
-- Select a location (if prompted). For quick prototyping choose "Test mode" (opens to public read/write) and remember to lock it down before production.
+```javascript
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
-3) Enable Storage
-- Build -> Storage -> Get started
-- Use the default bucket. Note the bucket name (typically `<project-id>.appspot.com`).
+// Project configuration (from Firebase Console)
+const firebaseConfig = {
+  apiKey: "AIzaSyBAGhJLeDW_spmUfv4bSUcbzwNUDXJmR7U",
+  authDomain: "ieee-studyspace.firebaseapp.com",
+  projectId: "ieee-studyspace",
+  storageBucket: "ieee-studyspace.appspot.com",
+  messagingSenderId: "1088507424557",
+  appId: "1:1088507424557:web:6419db18295e52113dada4",
+  measurementId: "G-23363RDMLJ"
+};
 
-4) Install Firebase SDK (web)
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-  npm install firebase@12.12.1 --save
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app);
 
-5) Local Emulator Suite (recommended)
-- Install the Firebase CLI: https://firebase.google.com/docs/cli
-- From your project root initialize emulators (auth/firestore):
+export { app, db };
+```
 
-  firebase init emulators
+Notes:
+- Use the exact values from your Firebase Console (Project settings → General → Your apps → Config).
+- The recommended `storageBucket` format is `PROJECT_ID.appspot.com`. Use whatever the Console shows; earlier mismatches caused 404/CORS errors.
+- For local development with Vite, consider moving these values into environment variables (`import.meta.env.VITE_...`) and referencing them instead of hardcoding.
 
-- Or run emulators directly if already initialized:
+If you want, I can add a `.env.example` and update `src/firebase.js` to read from `import.meta.env` so the config isn't hardcoded in source control.
 
-  firebase emulators:start
+## Adding data to Firestore (examples)
 
-- The `firebase.json` file is included in the repo and configures ports for auth/firestore/functions and UI.
+Cloud Firestore stores data in documents inside collections. Collections and documents are created implicitly the first time you add data.
 
-6) CORS for Storage (if you serve from local dev server)
-- Create a small cors.json file:
+Below are two example snippets (modular SDK) showing how to add documents to a `users` collection.
 
-  echo '[{"origin": ["*"],"method": ["GET","PUT","POST","DELETE","HEAD"],"maxAgeSeconds": 3600}]' > cors.json
+```javascript
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../src/firebase"; // adjust the path depending on where you run this
 
-- Then use gsutil (or Google Cloud Console) to set it (requires gcloud/gsutil):
+async function addUsersExample() {
+  try {
+    const docRef1 = await addDoc(collection(db, "users"), {
+      first: "Ada",
+      last: "Lovelace",
+      born: 1815,
+    });
+    console.log("Document written with ID: ", docRef1.id);
 
-  gsutil cors set cors.json gs://<your-bucket>.appspot.com
-
-7) Security rules
-- The repo contains `firestore.rules` with reasonable defaults for a prototype. Adapt rules before production.
-
-8) Local dev wiring
-- Your `src/firebase.js` should initialize Firebase and export `auth`, `db`, `storage`. The project already contains a `src/firebase.js` file — verify the `storageBucket` string looks like `<project-id>.appspot.com`.
-- To use the emulator in development, add these lines to your firebase initialization code (when running locally):
-
-import { connectFirestoreEmulator } from 'firebase/firestore';
-import { connectAuthEmulator } from 'firebase/auth';
-
-if (location.hostname === 'localhost') {
-  connectFirestoreEmulator(db, 'localhost', 8080);
-  connectAuthEmulator(auth, 'http://localhost:9099');
+    const docRef2 = await addDoc(collection(db, "users"), {
+      first: "Alan",
+      middle: "Mathison",
+      last: "Turing",
+      born: 1912,
+    });
+    console.log("Document written with ID: ", docRef2.id);
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
 }
 
-9) Adding data samples (JS)
-- Use examples in the Firestore quickstart. For instance:
+// call it from an async context
+addUsersExample();
+```
 
-import { collection, addDoc } from 'firebase/firestore';
-await addDoc(collection(db, 'resources'), { name: 'notes.pdf', uploader: 'you', createdAt: serverTimestamp() });
+Notes:
+- Documents in the same collection can have different fields — Firestore is schemaless.
+- In production, secure your writes with Firestore security rules (avoid test mode long-term).
+- When testing locally, you can use the Firestore emulator (`firebase emulators:start --only firestore`) to avoid writing to production.
 
-10) Next steps
-- Wire your Q&A and Resources components to Firestore (Resources is already wired in the repo).
-- Harden rules for production, enable App Check if required, and restrict Storage bucket CORS instead of wildcard origin.
-
-
-If you want, I can:
-- Add emulator wiring directly in `src/firebase.js` guarded by `location.hostname === 'localhost'`.
-- Add a small script to seed sample data into Firestore using the Admin SDK or emulator.
-
-Tell me which of those you want me to add now and I'll do it.
