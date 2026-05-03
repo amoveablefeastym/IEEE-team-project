@@ -300,14 +300,7 @@ function Message({ msg, depth, onAddReply, onExpand, onDelete }) {
             )}
           </div>
 
-          {/* Pinned bookmark */}
-          {msg.pinned && (
-            <div className="mt-2 w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: '#F59E0B' }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-              </svg>
-            </div>
-          )}
+          {/* Pinned bookmark removed */}
 
           {/* Inline reply input */}
           {replying && (
