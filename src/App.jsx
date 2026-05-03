@@ -12,6 +12,7 @@ import ChatPage from './chat';
 import CourseDiscovery from './CourseDiscovery';
 import StudySessions from './StudySessionsPage';
 import DashboardOverview from './DashboardOverview';
+import ResourcesPage from './ResourcesPage';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -38,9 +39,10 @@ function Dashboard() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardOverview />} />
               <Route path="/qa" element={<div className="flex-1 overflow-y-auto w-full"><QAndA /></div>} />
+              <Route path="/mentor/qa" element={<div className="flex-1 overflow-y-auto w-full"><QAndA isMentorView={true} /></div>} />
               <Route path="/chat" element={<ChatPage showUpperclassmen={showUpperclassmen} />} />
               <Route path="/study" element={<StudySessions />} />
-              <Route path="/mentorship" element={<Placeholder label="Mentorship" />} />
+              <Route path="/resources" element={<ResourcesPage />} />
             </Routes>
           </main>
         </div>

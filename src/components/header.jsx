@@ -1,10 +1,14 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 
-const TABS = [
+const DEFAULT_TABS = [
   { to: '/chat', label: 'Chat' },
   { to: '/qa',   label: 'Q&A' },
   { to: '/study',      label: 'Study Sessions' },
-  { to: '/mentorship', label: 'Mentorship' },
+  { to: '/resources', label: 'Resources' },
+];
+
+const MENTOR_TABS = [
+  { to: '/mentor/qa', label: 'Q&A (Upperclassmen)' },
 ];
 
 function Toggle({ checked, onChange }) {
@@ -21,11 +25,17 @@ function Toggle({ checked, onChange }) {
 }
 
 export default function Header({ showUpperclassmen, onToggleUpperclassmen }) {
+  const location = useLocation();
+  const isMentorView = location.pathname.startsWith('/mentor');
+  const TABS = isMentorView ? MENTOR_TABS : DEFAULT_TABS;
+
   return (
     <header className="bg-surface border-b border-line px-6 py-4 flex flex-col gap-4 sticky top-0 z-10">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-primary">CS214 - Data Structures and Algorithms</h2>
+          <h2 className="text-xl font-bold text-primary">
+            {isMentorView ? 'CS111 - Past Class Mentorship' : 'CS214 - Data Structures and Algorithms'}
+          </h2>
           <p className="text-label text-muted font-medium">Spring Quarter</p>
         </div>
         {/* Search, Notification, and Upperclassmen toggle */}
@@ -39,8 +49,12 @@ export default function Header({ showUpperclassmen, onToggleUpperclassmen }) {
             <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-label text-muted font-medium whitespace-nowrap">Show Upperclassmen Only</span>
-            <Toggle checked={showUpperclassmen} onChange={onToggleUpperclassmen} />
+            {!isMentorView && (
+              <>
+                <span className="text-label text-muted font-medium whitespace-nowrap">Show Upperclassmen Only</span>
+                <Toggle checked={showUpperclassmen} onChange={onToggleUpperclassmen} />
+              </>
+            )}
           </div>
         </div>
       </div>

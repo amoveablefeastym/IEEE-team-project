@@ -8,7 +8,7 @@ function Tag({ label, isActive }) {
   );
 }
 
-function Question({ author, role, title, text, time, tags, replies, votes }) {
+function Question({ author, role, title, text, time, tags, replies, votes, isForUpperclassmen }) {
   const [currentVotes, setCurrentVotes] = useState(votes);
   const [userVote, setUserVote] = useState(null);
   const [expanded, setExpanded] = useState(false);
@@ -47,7 +47,17 @@ function Question({ author, role, title, text, time, tags, replies, votes }) {
             <span className="text-label text-sub">{author} • {role}</span>
             <span className="text-xxs text-muted">{time}</span>
           </div>
-          <h3 className="text-primary font-semibold mb-1 cursor-pointer hover:text-brand" onClick={() => setExpanded(!expanded)}>{title}</h3>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-primary font-semibold cursor-pointer hover:text-brand" onClick={() => setExpanded(!expanded)}>
+              {isForUpperclassmen && (
+                <span className="inline-flex items-center gap-1 bg-brand text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded mr-2 align-middle" title="Question directed to Upperclassmen">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0z"></path></svg>
+                  Upperclassmen
+                </span>
+              )}
+              {title}
+            </h3>
+          </div>
           <p className="text-sub text-sm mb-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>{text}</p>
 
           <div className="flex flex-wrap gap-1 mb-2">
@@ -76,11 +86,12 @@ function Question({ author, role, title, text, time, tags, replies, votes }) {
   );
 }
 
-function QAndA() {
+function QAndA({ isMentorView = false }) {
   const scrollRef = useRef(null);
   const [showModal, setShowModal] = useState(false);
   const [questionTitle, setQuestionTitle] = useState('');
   const [questionBody, setQuestionBody] = useState('');
+  const [askUpperclassmen, setAskUpperclassmen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeTopic, setActiveTopic] = useState(null);
 
@@ -99,30 +110,92 @@ function QAndA() {
 
   const submitQuestion = (event) => {
     event.preventDefault();
-    console.log('Question submitted:', { questionTitle, questionBody });
+    console.log('Question submitted:', { questionTitle, questionBody, askUpperclassmen });
     setQuestionTitle('');
     setQuestionBody('');
+    setAskUpperclassmen(false);
     setShowModal(false);
   };
+
+  // Mock data for the two different views
+  const normalQuestions = [
+    {
+      id: 1,
+      author: "M. Smith",
+      role: "Student",
+      title: "Help needed on Assignment 3",
+      text: "I'm trying to implement a while loop, but it keeps running forever. Can someone help me figure out what's wrong?",
+      time: "2 hours ago",
+      tags: ['loops', 'logic', 'A3'],
+      replies: 12,
+      votes: 23,
+      isForUpperclassmen: true
+    },
+    {
+      id: 2,
+      author: "Jordan Lee",
+      role: "Student",
+      title: "Difference between pass by value and pass by reference?",
+      text: "I'm confused about what happens when you modify parameters inside a function. Can someone explain with examples?",
+      time: "5 hours ago",
+      tags: ['midterm_review', 'functions', 'concepts'],
+      replies: 18,
+      votes: 45,
+      isForUpperclassmen: false
+    }
+  ];
+
+  const mentorQuestions = [
+    {
+      id: 3,
+      author: "Freshman Alex",
+      role: "Student",
+      title: "How to prepare for the CS 111 Final?",
+      text: "What are the common mistakes people make on this final? Is it mostly coding or multiple choice?",
+      time: "1 hour ago",
+      tags: ['exam_prep', 'general'],
+      replies: 0,
+      votes: 5,
+      isForUpperclassmen: true
+    },
+    {
+      id: 4,
+      author: "Katie S.",
+      role: "Student",
+      title: "Are structs heavily tested?",
+      text: "We just learned structs yesterday, I'm worried they'll be a massive part of the quiz on friday.",
+      time: "4 hours ago",
+      tags: ['structs', 'quiz'],
+      replies: 2,
+      votes: 11,
+      isForUpperclassmen: true
+    }
+  ];
+
+  const displayedQuestions = isMentorView ? mentorQuestions : normalQuestions;
 
   return (
     <div className="relative flex-1 overflow-hidden p-6">
       <div ref={scrollRef} className="h-full overflow-y-auto pr-2 space-y-4">
         <div className="bg-surface rounded-card border border-line p-4 flex items-center justify-between">
           <div>
-            <h2 className="text-primary font-bold text-lg">CS214 - Data Structures and Algorithms</h2>
+            <h2 className="text-primary font-bold text-lg">
+              {isMentorView ? 'Questions for Upperclassmen in CS 111' : 'CS214 - Data Structures and Algorithms'}
+            </h2>
             <p className="text-label text-sub mt-0.5">
-              <span className="text-brand font-medium">4 Answered</span>
+              <span className="text-brand font-medium">{isMentorView ? '2 Answered' : '4 Answered'}</span>
               <span className="mx-1 text-muted">|</span>
               <span>1 Unanswered</span>
             </p>
           </div>
-          <button
-            onClick={openModal}
-            className="bg-brand hover:bg-brand-hover text-white text-label font-medium px-4 py-2 rounded-btn transition-colors"
-          >
-            + Ask a Question
-          </button>
+          {!isMentorView && (
+            <button
+              onClick={openModal}
+              className="bg-brand hover:bg-brand-hover text-white text-label font-medium px-4 py-2 rounded-btn transition-colors"
+            >
+              + Ask a Question
+            </button>
+          )}
         </div>
 
         <input
@@ -139,21 +212,15 @@ function QAndA() {
             All
           </button>
           <button 
-            onClick={() => setActiveFilter('Open Questions')} 
-            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'Open Questions' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
+            onClick={() => setActiveFilter('Questions I Answered')} 
+            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'Questions I Answered' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
           >
-            Open Questions
-          </button>
-          <button 
-            onClick={() => setActiveFilter('My Questions')} 
-            className={`text-label px-3 py-1.5 rounded-btn transition-colors border ${activeFilter === 'My Questions' ? 'bg-brand text-white border-brand' : 'bg-surface border-line text-sub hover:border-brand hover:text-brand'}`}
-          >
-            My Questions
+            Questions I Answered
           </button>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {['loops', 'conditionals', 'functions', 'arrays', 'objects', 'recursion'].map((tag) => (
+          {(isMentorView ? ['exam_prep', 'general', 'structs', 'quiz'] : ['loops', 'conditionals', 'functions', 'arrays', 'objects', 'recursion']).map((tag) => (
             <button 
               key={tag} 
               onClick={() => setActiveTopic(activeTopic === tag ? null : tag)} 
@@ -164,26 +231,20 @@ function QAndA() {
           ))}
         </div>
 
-        <Question
-          author="M. Smith"
-          role="Student"
-          title="Help needed on Assignment 3"
-          text="I'm trying to implement a while loop, but it keeps running forever. Can someone help me figure out what's wrong?"
-          time="2 hours ago"
-          tags={['loops', 'logic', 'A3']}
-          replies={12}
-          votes={23}
-        />
-        <Question
-          author="Jordan Lee"
-          role="Student"
-          title="Difference between pass by value and pass by reference?"
-          text="I'm confused about what happens when you modify parameters inside a function. Can someone explain with examples?"
-          time="5 hours ago"
-          tags={['midterm_review', 'functions', 'concepts']}
-          replies={18}
-          votes={45}
-        />
+        {displayedQuestions.map((q) => (
+          <Question
+            key={q.id}
+            author={q.author}
+            role={q.role}
+            title={q.title}
+            text={q.text}
+            time={q.time}
+            tags={q.tags}
+            replies={q.replies}
+            votes={q.votes}
+            isForUpperclassmen={q.isForUpperclassmen}
+          />
+        ))}
       </div>
 
       <div className="pointer-events-none absolute right-4 top-1/2 flex flex-col gap-2 -translate-y-1/2">
@@ -237,6 +298,17 @@ function QAndA() {
                   required
                 />
               </label>
+              
+              <label className="flex items-center gap-2 mt-2 cursor-pointer bg-brand-light p-3 rounded-lg border border-brand/20">
+                <input 
+                  type="checkbox" 
+                  checked={askUpperclassmen}
+                  onChange={(e) => setAskUpperclassmen(e.target.checked)}
+                  className="accent-brand w-4 h-4 cursor-pointer"
+                />
+                <span className="text-sm font-medium text-brand">Direct this question to Upperclassmen / Alumni</span>
+              </label>
+
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"

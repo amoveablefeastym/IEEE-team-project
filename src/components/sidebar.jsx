@@ -67,6 +67,26 @@ export default function Sidebar() {
         </ul>
       </nav>
 
+      {/* Alumni / Mentor Classes */}
+      <nav className="px-3 pt-5">
+        <div className="flex items-center justify-between px-2 mb-1">
+          <p className="text-xxs text-muted font-semibold uppercase tracking-widest">Past Classes</p>
+        </div>
+        <ul className="space-y-0.5">
+          <li
+            onClick={() => navigate('/mentor/qa')}
+            className={`px-2 py-1.5 rounded-btn text-label cursor-pointer transition-colors ${
+              location.pathname === '/mentor/qa' ? 'bg-brand/10 text-brand' : 'text-sub hover:bg-page hover:text-primary'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-brand">🎓</span>
+              <span>CS 111</span>
+            </div>
+          </li>
+        </ul>
+      </nav>
+
       {/* User profile */}
       <div className="mt-auto px-4 py-4 border-t border-line flex items-center gap-3">
         <div className="w-8 h-8 rounded-avatar bg-avatar-user text-white text-xxs font-bold flex items-center justify-center flex-shrink-0">

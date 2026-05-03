@@ -9,7 +9,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBAGhJLeDW_spmUfv4bSUcbzwNUDXJmR7U",
   authDomain: "ieee-studyspace.firebaseapp.com",
   projectId: "ieee-studyspace",
-  storageBucket: "ieee-studyspace.firebasestorage.app",
+  storageBucket: "ieee-studyspace.appspot.com",
   messagingSenderId: "1088507424557",
   appId: "1:1088507424557:web:6419db18295e52113dada4",
   measurementId: "G-23363RDMLJ"
