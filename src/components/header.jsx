@@ -11,32 +11,24 @@ const MENTOR_TABS = [
   { to: '/mentor/qa', label: 'Q&A (Upperclassmen)' },
 ];
 
-function Toggle({ checked, onChange }) {
-  return (
-    <div
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex w-10 h-6 rounded-full cursor-pointer transition-colors duration-200 flex-shrink-0 ${checked ? 'bg-brand' : 'bg-gray-200'}`}
-    >
-      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
-    </div>
-  );
-}
+// Upperclassmen toggle removed per request
 
-export default function Header({ showUpperclassmen, onToggleUpperclassmen }) {
+export default function Header() {
   const location = useLocation();
   const isMentorView = location.pathname.startsWith('/mentor');
+  const isDashboard = location.pathname === '/dashboard';
   const TABS = isMentorView ? MENTOR_TABS : DEFAULT_TABS;
 
   return (
     <header className="bg-surface border-b border-line px-6 py-4 flex flex-col gap-4 sticky top-0 z-10">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-primary">
-            {isMentorView ? 'CS111 - Past Class Mentorship' : 'CS214 - Data Structures and Algorithms'}
+          <h2 className="text-2xl font-bold text-primary">
+            {isMentorView ? 'CS111 - Past Class Mentorship' : (isDashboard ? 'Main Dashboard' : 'CS214 - Data Structures and Algorithms')}
           </h2>
-          <p className="text-label text-muted font-medium">Spring Quarter</p>
+          {!isDashboard && (
+            <p className="text-label text-muted font-medium">Spring Quarter</p>
+          )}
         </div>
         {/* Search, Notification, and Upperclassmen toggle */}
         <div className="flex items-center gap-4">
@@ -49,37 +41,34 @@ export default function Header({ showUpperclassmen, onToggleUpperclassmen }) {
             <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
           <div className="flex items-center gap-2">
-            {!isMentorView && (
-              <>
-                <span className="text-label text-muted font-medium whitespace-nowrap">Show Upperclassmen Only</span>
-                <Toggle checked={showUpperclassmen} onChange={onToggleUpperclassmen} />
-              </>
-            )}
+            {/* Upperclassmen toggle removed */}
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <nav className="border-t border-line pt-2 mt-2 -mb-4">
-        <ul className="flex gap-6 text-label font-medium text-muted list-none m-0 p-0">
-          {TABS.map(({ to, label }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                className={({ isActive }) =>
-                  `pb-3 border-b-2 block cursor-pointer transition-colors ${
-                    isActive
-                      ? 'border-brand text-brand'
-                      : 'border-transparent hover:text-primary'
-                  }`
-                }
-              >
-                {label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {!isDashboard && (
+        <nav className="border-t border-line pt-2 mt-2 -mb-4">
+          <ul className="flex gap-6 text-label font-medium text-muted list-none m-0 p-0">
+            {TABS.map(({ to, label }) => (
+              <li key={to}>
+                <NavLink
+                  to={to}
+                  className={({ isActive }) =>
+                    `pb-3 border-b-2 block cursor-pointer transition-colors ${
+                      isActive
+                        ? 'border-brand text-brand'
+                        : 'border-transparent hover:text-primary'
+                    }`
+                  }
+                >
+                  {label}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 }

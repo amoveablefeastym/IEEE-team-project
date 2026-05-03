@@ -23,7 +23,6 @@ function ProtectedRoute({ children }) {
 }
 
 function Dashboard() {
-  const [showUpperclassmen, setShowUpperclassmen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const background = location.state?.background;
@@ -33,20 +32,20 @@ function Dashboard() {
       <div className="flex bg-gray-50 h-screen overflow-hidden">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-          <Header showUpperclassmen={showUpperclassmen} onToggleUpperclassmen={setShowUpperclassmen} />
+          <Header />
           <main className="flex-1 overflow-hidden flex flex-col">
             <Routes location={background || location}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardOverview />} />
               <Route path="/qa" element={<div className="flex-1 overflow-y-auto w-full"><QAndA /></div>} />
               <Route path="/mentor/qa" element={<div className="flex-1 overflow-y-auto w-full"><QAndA isMentorView={true} /></div>} />
-              <Route path="/chat" element={<ChatPage showUpperclassmen={showUpperclassmen} />} />
+              <Route path="/chat" element={<ChatPage />} />
               <Route path="/study" element={<StudySessions />} />
               <Route path="/resources" element={<ResourcesPage />} />
             </Routes>
           </main>
         </div>
-        <RightSidebar />
+        {location.pathname !== '/dashboard' && <RightSidebar />}
       </div>
 
       {background && (
