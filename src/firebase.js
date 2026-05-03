@@ -3,6 +3,8 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 // import { getAnalytics } from "firebase/analytics";
+import { connectFirestoreEmulator } from 'firebase/firestore';
+import { connectAuthEmulator } from 'firebase/auth';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -24,3 +26,15 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Connect to local emulators when running on localhost during development
+if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
+  try {
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    connectAuthEmulator(auth, 'http://localhost:9099');
+    console.info('Connected to Firebase emulators (Firestore, Auth)');
+  } catch (e) {
+    // don't crash the app if emulators aren't available
+    console.warn('Could not connect to Firebase emulators', e);
+  }
+}
