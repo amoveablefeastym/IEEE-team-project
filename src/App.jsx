@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ClassesProvider } from './context/ClassesContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import SignIn from './pages/SignIn';
@@ -42,17 +44,16 @@ function Dashboard() {
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/study" element={<StudySessions />} />
               <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/discover" element={<DashboardOverview />} />
             </Routes>
           </main>
         </div>
         {location.pathname !== '/dashboard' && <RightSidebar />}
       </div>
 
-      {background && (
-        <Routes>
-          <Route path="/discover" element={<CourseDiscovery onClose={() => navigate(-1)} />} />
-        </Routes>
-      )}
+      <Routes>
+        <Route path="/discover" element={<CourseDiscovery onClose={() => (background ? navigate(-1) : navigate('/dashboard'))} />} />
+      </Routes>
     </>
   );
 }
@@ -67,22 +68,26 @@ function Placeholder({ label }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ClassesProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Router>
+        </ClassesProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

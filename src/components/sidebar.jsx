@@ -1,10 +1,12 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useClasses } from '../context/ClassesContext'
 
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
+  const { classes, removeClass } = useClasses()
   
   const handleLogout = async () => {
     try {
@@ -50,20 +52,43 @@ export default function Sidebar() {
           </button>
         </div>
         <ul className="space-y-0.5">
-          <li
-            onClick={() => navigate('/chat')}
-            className={`px-2 py-1.5 rounded-btn text-label cursor-pointer transition-colors ${
-              ['/chat', '/qa', '/study', '/mentorship'].includes(location.pathname) ? 'bg-brand/10 text-brand' : 'text-sub hover:bg-page hover:text-primary'
-            }`}
-          >
-            Class One
-          </li>
-          <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">
-            Class Two
-          </li>
-          <li className="px-2 py-1.5 rounded-btn text-label text-sub hover:bg-page hover:text-primary cursor-pointer transition-colors">
-            Class Three
-          </li>
+          {classes.length === 0 ? (
+            <li className="px-2 py-1.5 text-xxs text-muted leading-relaxed">
+              No classes yet.{' '}
+              <button
+                onClick={() => navigate('/discover', { state: { background: location } })}
+                className="text-brand hover:text-brand-hover font-medium"
+              >
+                Add one
+              </button>
+            </li>
+          ) : (
+            classes.map((c) => {
+              const inClassRoute = ['/chat', '/qa', '/study', '/mentorship'].includes(location.pathname)
+              return (
+                <li
+                  key={c.id}
+                  onClick={() => navigate('/chat')}
+                  className={`group flex items-center justify-between px-2 py-1.5 rounded-btn text-label cursor-pointer transition-colors ${
+                    inClassRoute ? 'text-sub hover:bg-page hover:text-primary' : 'text-sub hover:bg-page hover:text-primary'
+                  }`}
+                  title={c.title}
+                >
+                  <span className="truncate">{c.code || c.title}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeClass(c.id)
+                    }}
+                    className="text-muted hover:text-brand text-xxs opacity-0 group-hover:opacity-100 transition-opacity ml-1 leading-none"
+                    title="Remove from My Classes"
+                  >
+                    ×
+                  </button>
+                </li>
+              )
+            })
+          )}
         </ul>
       </nav>
 
