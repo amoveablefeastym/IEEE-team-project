@@ -38,14 +38,7 @@ export default function RightSidebar() {
         </div>
       </div>
 
-      {/* Become a Mentor banner */}
-      <div className="mt-auto bg-brand-light rounded-card p-3">
-        <h4 className="text-label text-brand font-semibold mb-1">Become a Mentor!</h4>
-        <p className="text-xxs text-sub mb-2">Share your knowledge and help your peers succeed in this class.</p>
-        <button className="w-full bg-brand hover:bg-brand-hover text-white text-xxs font-medium py-1.5 rounded-btn transition-colors">
-          Learn More
-        </button>
-      </div>
+      {/* Become a Mentor banner removed */}
     </aside>
   );
 }

@@ -338,7 +338,7 @@ function Message({ msg, depth, onAddReply, onExpand, onDelete }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ChatPage({ showUpperclassmen }) {
+export default function ChatPage({ showUpperclassmen = false }) {
   const [threads, setThreads] = useState(SEED_THREADS)
   const [message, setMessage] = useState('')
   const [anonymous, setAnonymous] = useState(false)
