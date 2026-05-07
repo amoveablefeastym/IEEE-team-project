@@ -84,8 +84,11 @@ export default function CreateSessionModal({ onClose, onCreate }) {
           <div className="bg-surface mx-4 mt-4 rounded-card border-2 border-brand overflow-hidden">
             <div className="flex items-center gap-4 p-4">
               <div className="flex flex-col items-center gap-1">
-                <div className="w-14 h-14 rounded-full bg-page border-2 border-line flex items-center justify-center text-2xl">
-                  📚
+                <div className="w-14 h-14 rounded-full bg-page border-2 border-line flex items-center justify-center flex-shrink-0">
+                  <svg className="w-7 h-7 text-muted" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
                 </div>
                 <button className="text-brand text-xxs font-semibold hover:underline">Edit</button>
               </div>
@@ -161,7 +164,7 @@ export default function CreateSessionModal({ onClose, onCreate }) {
 
           {/* Date & Time */}
           <div className="px-4 mt-5">
-            <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">🕐 Date &amp; Time</p>
+            <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">Date &amp; Time</p>
             <div className="bg-surface rounded-card border border-line overflow-hidden divide-y divide-line">
               <div className="flex items-center px-4 py-2.5 gap-3">
                 <span className="text-muted text-sm w-16 flex-shrink-0">Date</span>
@@ -195,7 +198,7 @@ export default function CreateSessionModal({ onClose, onCreate }) {
 
           {/* Location */}
           <div className="px-4 mt-5">
-            <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">📍 Location</p>
+            <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">Location</p>
             <input
               type="text"
               value={location}

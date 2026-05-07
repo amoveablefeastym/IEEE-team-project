@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from './context/AuthContext'
 import { useClasses } from './context/ClassesContext'
-import { subscribeSessions, createSession } from './services/firestore'
+import { subscribeSessions, createSession, joinSession } from './services/firestore'
 import SessionChat from './SessionChat'
 import CreateSessionModal from './CreateSessionModal'
 
@@ -29,7 +29,7 @@ function Avatar({ initials, color }) {
   )
 }
 
-function SessionCard({ session, onOpen }) {
+function SessionCard({ session, onOpen, onJoin, joining }) {
   const { title, joined, host, attendingCount, date, time, location, topics, description, attendees, spotsTotal } = session
   const spotsFilled = attendees.length
   const spotsLeft = spotsTotal - spotsFilled
@@ -37,9 +37,7 @@ function SessionCard({ session, onOpen }) {
   return (
     <div
       className={`bg-surface rounded-card border border-line overflow-hidden transition-all ${
-        joined
-          ? 'cursor-pointer hover:border-brand hover:shadow-sm'
-          : 'opacity-60 cursor-not-allowed'
+        joined ? 'cursor-pointer hover:border-brand hover:shadow-sm' : 'hover:border-brand/50'
       }`}
       onClick={joined ? onOpen : undefined}
     >
@@ -58,9 +56,13 @@ function SessionCard({ session, onOpen }) {
             ✓ Joined
           </span>
         ) : (
-          <span className="flex items-center gap-1 border-2 border-white text-white text-xxs font-semibold px-3 py-1 rounded-full flex-shrink-0">
-            + Join
-          </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); onJoin(session) }}
+            disabled={joining}
+            className="flex items-center gap-1 border-2 border-white text-white text-xxs font-semibold px-3 py-1 rounded-full flex-shrink-0 hover:bg-white/20 transition-colors disabled:opacity-60"
+          >
+            {joining ? '...' : '+ Join'}
+          </button>
         )}
       </div>
 
@@ -119,7 +121,7 @@ function SessionCard({ session, onOpen }) {
           <span className="text-xxs text-muted">{spotsFilled}/{spotsTotal} spots</span>
           {joined
             ? <span className="text-xxs text-brand font-medium">Open chat →</span>
-            : <span className="text-xxs text-muted">Members only</span>
+            : <span className="text-xxs text-muted">Join to access chat</span>
           }
         </div>
       </div>
@@ -136,6 +138,7 @@ function StudySessions() {
   const [query, setQuery] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [sessions, setSessions] = useState([])
+  const [joiningId, setJoiningId] = useState(null)
 
   // Subscribe to Firestore sessions for the active class
   useEffect(() => {
@@ -171,6 +174,23 @@ function StudySessions() {
       })
     } catch (e) {
       console.error('createSession failed:', e)
+    }
+  }
+
+  const COLORS = ['purple', 'teal', 'green', 'orange', 'pink', 'blue']
+
+  async function handleJoin(session) {
+    if (!user?.uid || !classId) return
+    setJoiningId(session.id)
+    try {
+      const authorName = user.displayName || (user.email ? user.email.split('@')[0] : 'You')
+      const initials = authorName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)]
+      await joinSession(classId, session.id, { id: user.uid, name: authorName, initials, color })
+    } catch (e) {
+      console.error('joinSession failed:', e)
+    } finally {
+      setJoiningId(null)
     }
   }
 
@@ -260,7 +280,13 @@ function StudySessions() {
       {/* Session cards */}
       {classId && filtered.length > 0 ? (
         filtered.map((s) => (
-          <SessionCard key={s.id} session={s} onOpen={() => setOpenSession(s)} />
+          <SessionCard
+            key={s.id}
+            session={s}
+            onOpen={() => setOpenSession(s)}
+            onJoin={handleJoin}
+            joining={joiningId === s.id}
+          />
         ))
       ) : classId ? (
         <div className="text-center py-12 text-muted text-label">
