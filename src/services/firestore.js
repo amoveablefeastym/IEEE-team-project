@@ -11,64 +11,50 @@ import {
   setDoc,
   updateDoc,
   increment,
+  getDoc,
+  runTransaction,
+  where,
 } from 'firebase/firestore'
 
-// -- Chat/messages (class-level) --
-export function subscribeToClassMessages(onUpdate) {
-  const messagesCol = collection(db, 'classChat')
-  const messagesQuery = query(messagesCol, orderBy('createdAt', 'asc'))
+// -- Chat/messages (class-scoped) --
+// All chat data lives under classes/{classId}/chat so each class has its own isolated feed.
 
-  // Listen to messages and replies (replies are subcollections named 'replies')
-  const unsubMessages = onSnapshot(messagesQuery, (ms) => {
-    const messages = {}
-    ms.docs.forEach((d) => {
-      messages[d.id] = { id: d.id, ...(d.data() || {}), replies: [] }
-    })
-
-    // After we collect base messages, read all replies via collectionGroup
-    const repliesQuery = query(collectionGroup(db, 'replies'), orderBy('createdAt', 'asc'))
-    const unsubReplies = onSnapshot(repliesQuery, (rs) => {
-      // clear replies
-      Object.values(messages).forEach((m) => (m.replies = []))
-      rs.docs.forEach((r) => {
-        // parent message id is two levels up from the replies subcollection
-        const parentId = r.ref.parent.parent ? r.ref.parent.parent.id : null
-        if (parentId && messages[parentId]) {
-          messages[parentId].replies.push({ id: r.id, ...(r.data() || {}) })
-        }
-      })
-
-      const arr = Object.values(messages).sort((a, b) => {
-        const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0
-        const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0
-        return ta - tb
-      })
-      onUpdate(arr)
-    })
-
-    // Return a combined unsubscribe (messages listener will keep replies active)
-    // Note: we don't return unsubReplies here to the caller; instead return a function that unsubscribes both
-    // We'll keep unsubReplies in closure
-  ;(function keep(){})();
-    // When unsubMessages is called later we also want to stop unsubReplies - achieve by returning a function that calls both
-    const combinedUnsub = () => {
-      unsubMessages()
-      unsubReplies()
-    }
-    // Attach combinedUnsub so caller can call it
-    subscribeToClassMessages._lastUnsub = combinedUnsub
-  })
-
-  // Return a function that will unsubscribe both listeners
-  return () => {
-    if (typeof subscribeToClassMessages._lastUnsub === 'function') subscribeToClassMessages._lastUnsub()
-    else unsubMessages()
-  }
+function chatCol(classId) {
+  return collection(db, `classes/${classId}/chat`)
+}
+function repliesCol(classId, messageId) {
+  return collection(db, `classes/${classId}/chat/${messageId}/replies`)
 }
 
-export async function sendClassMessage({ text, anonymous, authorName, authorId, avatarBg, initials, badge }) {
-  const messagesCol = collection(db, 'classChat')
-  return addDoc(messagesCol, {
+export function subscribeToClassMessages(classId, onUpdate) {
+  if (!classId) { onUpdate([]); return () => {} }
+  const unsubMessages = onSnapshot(
+    query(chatCol(classId), orderBy('createdAt', 'asc')),
+    (snap) => {
+      const msgs = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }))
+      onUpdate(msgs)
+    },
+    (err) => { console.warn(`classes/${classId}/chat snapshot error:`, err.code, err.message) }
+  )
+  return unsubMessages
+}
+
+/** Subscribe to replies for a single message within a class chat */
+export function subscribeToMessageReplies(classId, messageId, onUpdate) {
+  if (!classId || !messageId) { onUpdate([]); return () => {} }
+  const q = query(repliesCol(classId, messageId), orderBy('createdAt', 'asc'))
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }))
+      onUpdate(items)
+    },
+    (err) => { console.warn(`classes/${classId}/chat/${messageId}/replies error:`, err.code, err.message) }
+  )
+}
+
+export async function sendClassMessage(classId, { text, anonymous, authorName, authorId, avatarBg, initials, badge }) {
+  return addDoc(chatCol(classId), {
     text,
     anonymous: !!anonymous,
     authorName: authorName || null,
@@ -80,9 +66,8 @@ export async function sendClassMessage({ text, anonymous, authorName, authorId, 
   })
 }
 
-export async function sendClassReply(parentId, { text, anonymous, authorName, authorId, avatarBg, initials, badge }) {
-  const repliesCol = collection(db, `classChat/${parentId}/replies`)
-  const docRef = await addDoc(repliesCol, {
+export async function sendClassReply(classId, parentId, { text, anonymous, authorName, authorId, avatarBg, initials, badge }) {
+  return addDoc(repliesCol(classId, parentId), {
     text,
     anonymous: !!anonymous,
     authorName: authorName || null,
@@ -92,16 +77,19 @@ export async function sendClassReply(parentId, { text, anonymous, authorName, au
     badge: badge || null,
     createdAt: serverTimestamp(),
   })
-  return docRef
 }
 
 // -- Q&A --
 export function subscribeToQuestions(onUpdate) {
   const q = query(collection(db, 'qa'), orderBy('createdAt', 'desc'))
-  return onSnapshot(q, (snap) => {
-    const items = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }))
-    onUpdate(items)
-  })
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }))
+      onUpdate(items)
+    },
+    (err) => { console.warn('qa snapshot error:', err.code, err.message) }
+  )
 }
 
 export async function postQuestion({ title, text, authorName, authorId, isForUpperclassmen = false, tags = [] }) {
@@ -132,4 +120,67 @@ export async function addQuestionReply(questionId, { text, authorName, authorId,
   const qDoc = doc(db, 'qa', questionId)
   await updateDoc(qDoc, { replyCount: increment(1) })
   return r
+}
+
+export function getQuestionReplies(questionId, onUpdate) {
+  const repliesQuery = query(collection(db, `qa/${questionId}/replies`), orderBy('createdAt', 'asc'))
+  return onSnapshot(
+    repliesQuery,
+    (snap) => {
+      const items = snap.docs.map(d => ({ id: d.id, ...(d.data()||{}) }))
+      onUpdate(items)
+    },
+    (err) => { console.warn(`qa/${questionId}/replies snapshot error:`, err.code, err.message) }
+  )
+}
+
+export function subscribeRepliesByUser(userId, onUpdate) {
+  if (!userId) {
+    onUpdate([])
+    return () => {}
+  }
+  const q = query(collectionGroup(db, 'replies'), where('authorId', '==', userId))
+  return onSnapshot(
+    q,
+    (snap) => {
+      const questionIds = new Set()
+      snap.docs.forEach((d) => {
+        const parent = d.ref.parent.parent
+        if (parent) questionIds.add(parent.id)
+      })
+      onUpdate(Array.from(questionIds))
+    },
+    (err) => { console.warn('subscribeRepliesByUser snapshot error:', err.code, err.message) }
+  )
+}
+
+/**
+ * Atomically apply a user's vote to a question and enforce one-vote-per-user.
+ * voteValue should be 1 (upvote), -1 (downvote), or 0 (remove vote).
+ */
+export async function voteQuestion(questionId, userId, voteValue) {
+  if (!userId) throw new Error('userId required to vote')
+  const qRef = doc(db, 'qa', questionId)
+  return runTransaction(db, async (tx) => {
+    const qSnap = await tx.get(qRef)
+    if (!qSnap.exists()) throw new Error('question not found')
+    const data = qSnap.data() || {}
+    const voters = data.voters || {} // voters: { userId: number }
+    const current = voters[userId] || 0
+
+    // If same vote, remove it
+    let delta = 0
+    if (voteValue === current) {
+      // remove vote
+      delete voters[userId]
+      delta = -current
+    } else {
+      // set new vote
+      voters[userId] = voteValue
+      delta = voteValue - current
+    }
+
+    tx.update(qRef, { voters, votes: (data.votes || 0) + delta })
+    return { votes: (data.votes || 0) + delta, voters }
+  })
 }

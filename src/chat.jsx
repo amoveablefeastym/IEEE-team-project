@@ -1,114 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from './context/AuthContext'
-import { subscribeToClassMessages, sendClassMessage, sendClassReply } from './services/firestore'
+import { subscribeToClassMessages, sendClassMessage, sendClassReply, subscribeToMessageReplies } from './services/firestore'
+import { useClasses } from './context/ClassesContext'
 
-// ─── Seed data ────────────────────────────────────────────────────────────────
-
-const SEED_THREADS = [
-  {
-    id: 1,
-    author: 'Alex Chen',
-    initials: 'AC',
-    avatarBg: '#C7D2FE',
-    avatarColor: '#4338CA',
-    badge: 'Previously Took Course',
-    time: '10:15 AM',
-    text: "Hey everyone! For the midterm review, I'd suggest focusing on AVL tree rotations and the Big-O analysis of Dijkstra's. Those were common stumbling blocks when I took this last year.",
-    pinned: true,
-    replies: [
-      {
-        id: 11,
-        author: 'Jordan Smith',
-        initials: 'JS',
-        avatarBg: '#D1FAE5',
-        avatarColor: '#065F46',
-        time: '10:20 AM',
-        replies: [
-          {
-            id: 111,
-            author: 'Alex Chen',
-            initials: 'AC',
-            avatarBg: '#C7D2FE',
-            avatarColor: '#4338CA',
-            badge: 'Previously Took Course',
-            time: '10:25 AM',
-            text: "Visualgo.net is amazing! Also the textbook has a good interactive section. I can share my notes if you want.",
-            pinned: true,
-            replies: [
-              {
-                id: 1111,
-                author: 'Jordan Smith',
-                initials: 'JS',
-                avatarBg: '#D1FAE5',
-                avatarColor: '#065F46',
-                time: '10:27 AM',
-                text: "That would be super helpful! Thanks so much!",
-                replies: [],
-              },
-            ],
-            hiddenCount: 0,
-          },
-          {
-            id: 112,
-            anonymous: true,
-            avatarBg: '#E5E7EB',
-            badge: 'Anonymous',
-            time: '10:30 AM',
-            text: "I've been using the same resource and it really helps. Also recommend doing practice problems from LeetCode.",
-            replies: [],
-          },
-        ],
-        hiddenCount: 1,
-        text: "Thanks Alex! Quick question: is there a specific resource you used to practice the rotations?",
-      },
-    ],
-    hiddenCount: 0,
-  },
-  {
-    id: 2,
-    author: 'Sarah Johnson',
-    initials: 'SJ',
-    avatarBg: '#FEE2E2',
-    avatarColor: '#991B1B',
-    time: '10:35 AM',
-    text: "Do you think graph algorithms will be heavily tested?",
-    replies: [
-      {
-        id: 21,
-        anonymous: true,
-        avatarBg: '#E5E7EB',
-        badge: 'Anonymous',
-        time: '10:40 AM',
-        text: "I'm also curious about this. The problem sets had a lot of graph problems.",
-        replies: [],
-      },
-    ],
-    hiddenCount: 1,
-  },
-  {
-    id: 3,
-    author: 'Maya Patel',
-    initials: 'MP',
-    avatarBg: '#FCE7F3',
-    avatarColor: '#9D174D',
-    time: '11:05 AM',
-    text: "I'm also struggling with the red-black tree deletions. Anyone down for a study session tomorrow at the library?",
-    replies: [
-      {
-        id: 31,
-        author: 'Liam Williams',
-        initials: 'LW',
-        avatarBg: '#EDE9FE',
-        avatarColor: '#5B21B6',
-        badge: 'Previously Took Course',
-        time: '11:15 AM',
-        text: "I can join! Red-black trees are tricky. Maya, I'm happy to explain the double-black cases for 30 mins.",
-        replies: [],
-      },
-    ],
-    hiddenCount: 0,
-  },
-]
+// Chat placeholder removed — chat now reads from Firestore in production or shows an empty feed locally.
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -236,24 +131,84 @@ function ReplyInput({ onSubmit, onCancel }) {
 
 // ─── Recursive message ────────────────────────────────────────────────────────
 
-function Message({ msg, depth, onAddReply, onExpand, onDelete }) {
+function ReplyMessage({ msg, depth, onAddReply, onDelete }) {
   const [replying, setReplying] = useState(false)
-  const avatarSize = depth === 0 ? 40 : depth === 1 ? 32 : 28
-  const visibleReplies = (msg.replies || []).slice(0, Math.max(0, (msg.replies || []).length - (msg.hiddenCount || 0)))
-  const hiddenCount = msg.hiddenCount || 0
+  const avatarSize = depth === 1 ? 32 : 28
   const isOwn = msg.isOwn === true
 
-  function handleReplySubmit(text) {
-    onAddReply(msg.id, text)
-    setReplying(false)
-  }
-
   return (
-    <div className={depth > 0 ? 'mt-4 pl-4 border-l-2 border-gray-100' : ''}>
+    <div className="mt-4 pl-4 border-l-2 border-gray-100">
       <div className="flex gap-3 group">
         <AvatarBubble msg={msg} size={avatarSize} />
         <div className="flex-1 min-w-0">
-          {/* Name + badge + time + delete */}
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-bold text-gray-800">
+                {msg.anonymous ? 'Anonymous' : (msg.author || msg.authorName || 'Unknown')}
+              </span>
+              {msg.badge && <BadgeChip type={msg.badge} />}
+              <span className="text-xs text-gray-400">{msg.time}</span>
+            </div>
+            {isOwn && (
+              <button onClick={() => onDelete(msg.id)} className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all rounded" title="Delete">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed">{msg.text}</p>
+          <button onClick={() => setReplying(v => !v)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-purple-600 transition-colors mt-2">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+            Reply
+          </button>
+          {replying && (
+            <ReplyInput onSubmit={(text) => { onAddReply(msg.id, text); setReplying(false) }} onCancel={() => setReplying(false)} />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Top-level message — owns a Firestore subscription for its replies */
+function Message({ msg, classId, onAddReply, onDelete }) {
+  const [replying, setReplying] = useState(false)
+  const [firestoreReplies, setFirestoreReplies] = useState(msg.replies || [])
+  const isOwn = msg.isOwn === true
+
+  // Subscribe to this message's replies directly — no collectionGroup, no index needed
+  useEffect(() => {
+    if (!classId || !msg.id || String(msg.id).startsWith('local_')) return
+    let unsub = null
+    try {
+      unsub = subscribeToMessageReplies(classId, msg.id, (items) => {
+        setFirestoreReplies(items.map(r => ({
+          id: r.id,
+          text: r.text,
+          anonymous: r.anonymous,
+          author: r.authorName || (r.anonymous ? null : 'Unknown'),
+          authorName: r.authorName,
+          initials: r.initials || (r.authorName ? r.authorName.split(' ').map(n => n[0]).join('').slice(0, 2) : 'UN'),
+          avatarBg: r.avatarBg || '#E5E7EB',
+          avatarColor: r.avatarColor || '#374151',
+          badge: r.anonymous ? 'Anonymous' : null,
+          time: r.createdAt?.toDate ? r.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          replies: [],
+        })))
+      })
+    } catch (e) {
+      console.warn('subscribeToMessageReplies failed:', e.message)
+    }
+    return () => { try { unsub?.() } catch (_) {} }
+  }, [classId, msg.id])
+
+  // Use Firestore replies if available, otherwise fall back to msg.replies (local/optimistic)
+  const replies = firestoreReplies.length > 0 ? firestoreReplies : (msg.replies || [])
+
+  return (
+    <div>
+      <div className="flex gap-3 group">
+        <AvatarBubble msg={msg} size={40} />
+        <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-bold text-gray-800">
@@ -262,71 +217,43 @@ function Message({ msg, depth, onAddReply, onExpand, onDelete }) {
               {msg.badge && <BadgeChip type={msg.badge} />}
               <span className="flex items-center gap-1 text-xs text-gray-400">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
+                  <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                 </svg>
                 {msg.time}
               </span>
             </div>
             {isOwn && (
-              <button
-                onClick={() => onDelete(msg.id)}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all rounded"
-                title="Delete message"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+              <button onClick={() => onDelete(msg.id)} className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all rounded" title="Delete message">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
               </button>
             )}
           </div>
 
-          {/* Text */}
           <p className="text-sm text-gray-700 leading-relaxed">{msg.text}</p>
 
-          {/* Reply button */}
           <div className="flex items-center gap-4 mt-2">
-            <button
-              onClick={() => setReplying((v) => !v)}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-purple-600 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
+            <button onClick={() => setReplying(v => !v)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-purple-600 transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
               Reply
             </button>
-            {(msg.replies || []).length > 0 && (
-              <span className="text-xs text-gray-400">
-                {(msg.replies || []).length} {(msg.replies || []).length === 1 ? 'reply' : 'replies'}
-              </span>
+            {replies.length > 0 && (
+              <span className="text-xs text-gray-400">{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
             )}
           </div>
 
-          {/* Pinned bookmark removed */}
-
-          {/* Inline reply input */}
           {replying && (
-            <ReplyInput onSubmit={handleReplySubmit} onCancel={() => setReplying(false)} />
+            <ReplyInput
+              onSubmit={(text) => { onAddReply(msg.id, text); setReplying(false) }}
+              onCancel={() => setReplying(false)}
+            />
           )}
         </div>
       </div>
 
-      {/* Visible nested replies */}
-      {visibleReplies.map((reply) => (
-        <Message key={reply.id} msg={reply} depth={depth + 1} onAddReply={onAddReply} onExpand={onExpand} onDelete={onDelete} />
+      {/* Replies */}
+      {replies.map((reply) => (
+        <ReplyMessage key={reply.id} msg={reply} depth={1} onAddReply={onAddReply} onDelete={onDelete} />
       ))}
-
-      {/* Show more */}
-      {hiddenCount > 0 && (
-        <div className={`mt-3 ${depth === 0 ? 'pl-14' : 'pl-4'}`}>
-          <button
-            onClick={() => onExpand(msg.id)}
-            className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 transition-colors"
-          >
-            ↳ Show {hiddenCount} more {hiddenCount === 1 ? 'reply' : 'replies'}
-          </button>
-        </div>
-      )}
     </div>
   )
 }
@@ -335,7 +262,8 @@ function Message({ msg, depth, onAddReply, onExpand, onDelete }) {
 
 export default function ChatPage({ showUpperclassmen = false }) {
   const { user } = useAuth()
-  const [threads, setThreads] = useState(SEED_THREADS)
+  const { activeClass } = useClasses()
+  const [threads, setThreads] = useState([])
   const [message, setMessage] = useState('')
   const [anonymous, setAnonymous] = useState(false)
 
@@ -343,40 +271,43 @@ export default function ChatPage({ showUpperclassmen = false }) {
     ? threads.filter((t) => t.badge === 'Previously Took Course')
     : threads
   useEffect(() => {
+    // Clear stale messages immediately when class changes so you never see another class's feed
+    setThreads([])
     let unsub = null
     try {
-      unsub = subscribeToClassMessages((msgs) => {
-        // map firestore shape to UI shape
+      unsub = subscribeToClassMessages(activeClass?.id, (msgs) => {
+        // map firestore shape to UI shape (no replies here — each Message subscribes to its own)
         const mapped = msgs.map((m) => ({
           id: m.id,
           text: m.text,
           anonymous: m.anonymous,
+          isOwn: m.authorId === user?.uid,
           author: m.authorName || (m.initials ? m.initials : 'Unknown'),
           initials: m.initials || (m.authorName ? m.authorName.split(' ').map(n=>n[0]).join('').slice(0,2) : 'UN'),
           avatarBg: m.avatarBg || '#E5E7EB',
-          avatarColor: m.avatarColor || '#374151',
+          avatarColor: m.avatarId === user?.uid ? '#FFFFFF' : '#374151',
           badge: m.badge || (m.previousTaker ? 'Previously Took Course' : null),
           time: m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-          replies: (m.replies || []).map((r) => ({
-            id: r.id,
-            text: r.text,
-            anonymous: r.anonymous,
-            author: r.authorName || 'Unknown',
-            time: r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-          })),
-          hiddenCount: 0,
+          replies: [],
         }))
         setThreads(mapped)
       })
     } catch (e) {
-      // Firestore not available or permission denied — keep seed threads
-      console.warn('Firestore subscribe failed, using local seed threads', e)
+      console.warn('Firestore subscribe failed', e)
     }
 
     return () => {
-      if (unsub) unsub()
+      try { if (unsub) unsub() } catch (_) {}
     }
-  }, [])
+  }, [activeClass?.id, user?.uid])
+
+  // Helper to compute author display name and initials from auth user
+  function getAuthorInfo(userObj, wantAnonymous) {
+    if (wantAnonymous) return { authorName: null, initials: null, avatarBg: '#E5E7EB' }
+    const name = userObj?.displayName || (userObj?.email ? userObj.email.split('@')[0] : 'User')
+    const initials = userObj?.displayName ? userObj.displayName.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() : (userObj?.email ? userObj.email.split('@')[0].slice(0,2).toUpperCase() : 'US')
+    return { authorName: name, initials, avatarBg: '#7C3AED' }
+  }
 
   function handleDelete(id) {
     setThreads((prev) => deleteMessage(prev, id))
@@ -384,65 +315,69 @@ export default function ChatPage({ showUpperclassmen = false }) {
 
   function handleSend() {
     if (!message.trim()) return
-    // persist to Firestore if available
-    const payload = {
-      text: message.trim(),
-      anonymous,
-      authorName: user?.displayName || 'Anonymous',
-      authorId: user?.uid || null,
-      initials: user?.displayName ? user.displayName.split(' ').map(n=>n[0]).join('').slice(0,2) : 'AN',
-      avatarBg: '#7C3AED',
-    }
-    sendClassMessage(payload).catch((e) => {
-      console.warn('sendClassMessage failed, falling back to local', e)
-      const newMsg = {
-        id: nextId++,
-        isOwn: true,
-        ...(anonymous
-          ? { anonymous: true, avatarBg: '#E5E7EB', badge: 'Anonymous' }
-          : { author: 'Jane Doe', initials: 'JD', avatarBg: '#7C3AED', avatarColor: '#FFFFFF' }),
-        time: now(),
-        text: message.trim(),
-        replies: [],
-        hiddenCount: 0,
-      }
-      setThreads((prev) => [...prev, newMsg])
-    })
+    if (!activeClass?.id) return
+    const author = getAuthorInfo(user, anonymous)
+    const text = message.trim()
     setMessage('')
+    const payload = {
+      text,
+      anonymous: !!anonymous,
+      authorName: author.authorName,
+      authorId: user?.uid || null,
+      initials: author.initials,
+      avatarBg: author.avatarBg,
+    }
+    // Optimistic local message — Firestore snapshot will replace it with the real one
+    const localId = `local_${nextId++}`
+    const optimistic = {
+      id: localId,
+      isOwn: true,
+      text,
+      ...(anonymous
+        ? { anonymous: true, avatarBg: '#E5E7EB', badge: 'Anonymous' }
+        : { author: author.authorName || 'You', initials: author.initials || 'YY', avatarBg: author.avatarBg, avatarColor: '#FFFFFF' }),
+      time: now(),
+      replies: [],
+    }
+    setThreads((prev) => [...prev, optimistic])
+    sendClassMessage(activeClass.id, payload)
+      .then(() => {
+        // Firestore snapshot will arrive and replace the optimistic entry via setThreads(mapped)
+        // Remove the local_ entry to avoid duplicates before the snapshot fires
+        setThreads((prev) => prev.filter((t) => t.id !== localId))
+      })
+      .catch((e) => {
+        console.warn('sendClassMessage failed, keeping local fallback', e)
+      })
   }
 
   function handleAddReply(parentId, text) {
+    if (!activeClass?.id) return
+    const author = getAuthorInfo(user, anonymous)
     const payload = {
       text,
-      anonymous,
-      authorName: user?.displayName || 'Anonymous',
+      anonymous: !!anonymous,
+      authorName: author.authorName,
       authorId: user?.uid || null,
-      initials: user?.displayName ? user.displayName.split(' ').map(n=>n[0]).join('').slice(0,2) : 'AN',
-      avatarBg: '#7C3AED',
+      initials: author.initials,
+      avatarBg: author.avatarBg,
     }
-    sendClassReply(parentId, payload).catch((e) => {
-      console.warn('sendClassReply failed, falling back to local', e)
-      const newReply = {
-        id: nextId++,
-        isOwn: true,
-        ...(anonymous
-          ? { anonymous: true, avatarBg: '#E5E7EB', badge: 'Anonymous' }
-          : { author: 'Jane Doe', initials: 'JD', avatarBg: '#7C3AED', avatarColor: '#FFFFFF' }),
-        time: now(),
-        text,
-        replies: [],
-        hiddenCount: 0,
-      }
-      setThreads((prev) => appendReply(prev, parentId, newReply))
+    sendClassReply(activeClass.id, parentId, payload).catch((e) => {
+      console.warn('sendClassReply failed', e)
     })
-  }
-
-  function handleExpand(msgId) {
-    setThreads((prev) => expandHidden(prev, msgId))
   }
 
   return (
     <div className="flex-1 flex flex-col p-6 overflow-hidden min-h-0">
+      {/* Active class header */}
+      {activeClass && (
+        <div className="mb-3 flex items-center gap-3">
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${activeClass.color || 'bg-brand/10 text-brand'}`}>
+            {activeClass.code}
+          </span>
+          <h2 className="text-base font-bold text-primary">{activeClass.title} — Class Chat</h2>
+        </div>
+      )}
       <div className="flex-1 min-h-0 bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
 
         {/* Message feed */}
@@ -452,9 +387,8 @@ export default function ChatPage({ showUpperclassmen = false }) {
               <Message
                 key={thread.id}
                 msg={thread}
-                depth={0}
+                classId={activeClass?.id}
                 onAddReply={handleAddReply}
-                onExpand={handleExpand}
                 onDelete={handleDelete}
               />
             ))}

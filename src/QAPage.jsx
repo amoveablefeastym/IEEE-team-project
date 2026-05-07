@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
-import { subscribeToQuestions, postQuestion } from './services/firestore';
+import { subscribeToQuestions, postQuestion, getQuestionReplies, addQuestionReply, voteQuestion, subscribeRepliesByUser } from './services/firestore';
 
 function Tag({ label, isActive }) {
   return (
@@ -10,35 +10,68 @@ function Tag({ label, isActive }) {
   );
 }
 
-function Question({ author, role, title, text, time, tags, replies, votes, isForUpperclassmen }) {
+function Question({ qdoc, isMentorView, onAddReply }) {
+  const { id, authorName, role, title, text, time, tags, votes = 0, isForUpperclassmen } = qdoc
   const [currentVotes, setCurrentVotes] = useState(votes);
-  const [userVote, setUserVote] = useState(null);
+  const [userVote, setUserVote] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [replies, setReplies] = useState([])
+  const [replying, setReplying] = useState(false)
+  const [replyText, setReplyText] = useState('')
+  const { user } = useAuth()
 
-  const handleVote = (type) => {
-    if (userVote === type) {
-      setCurrentVotes(votes);
-      setUserVote(null);
-    } else {
-      setCurrentVotes(type === 'up' ? votes + 1 : votes - 1);
-      setUserVote(type);
+  useEffect(() => {
+    // reflect initial votes and user vote from voters map if present
+    setCurrentVotes(qdoc.votes || 0)
+    if (qdoc.voters && user) setUserVote(qdoc.voters[user.uid] || 0)
+  }, [qdoc, user])
+
+  useEffect(() => {
+    let unsub = null
+    try {
+      unsub = getQuestionReplies(id, (items) => setReplies(items))
+    } catch (e) {
+      console.warn('could not subscribe to replies', e)
     }
-  };
+    return () => { try { unsub && unsub() } catch (_) {} }
+  }, [id])
+
+  const handleVote = async (val) => {
+    if (!user) {
+      alert('Please sign in to vote')
+      return
+    }
+    const numeric = val // 1 or -1
+    const optimisticDelta = (numeric === userVote) ? -userVote : (numeric - userVote)
+    setCurrentVotes((v) => v + optimisticDelta)
+    const prevVote = userVote
+    const newVote = numeric === userVote ? 0 : numeric
+    setUserVote(newVote)
+    try {
+      const result = await voteQuestion(id, user.uid, newVote)
+      setCurrentVotes(result.votes)
+    } catch (e) {
+      console.error('vote failed', e)
+      // rollback
+      setUserVote(prevVote)
+      setCurrentVotes((v) => v - optimisticDelta)
+    }
+  }
 
   return (
     <div className="bg-surface rounded-card border border-line p-4 flex flex-col gap-4">
       <div className="flex gap-4">
         <div className="flex flex-col items-center justify-start gap-1 text-muted text-sm min-w-[32px]">
           <button 
-            onClick={() => handleVote('up')} 
-            className={`transition-colors ${userVote === 'up' ? 'text-brand font-bold' : 'hover:text-brand'}`}
+            onClick={() => handleVote(1)} 
+            className={`transition-colors ${userVote === 1 ? 'text-brand font-bold' : 'hover:text-brand'}`}
           >
             ⬆
           </button>
           <span className={`font-medium ${userVote ? 'text-brand' : 'text-primary'}`}>{currentVotes}</span>
           <button 
-            onClick={() => handleVote('down')} 
-            className={`transition-colors ${userVote === 'down' ? 'text-red-500 font-bold' : 'hover:text-red-500'}`}
+            onClick={() => handleVote(-1)} 
+            className={`transition-colors ${userVote === -1 ? 'text-red-500 font-bold' : 'hover:text-red-500'}`}
           >
             ⬇
           </button>
@@ -46,8 +79,8 @@ function Question({ author, role, title, text, time, tags, replies, votes, isFor
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-label text-sub">{author} • {role}</span>
-            <span className="text-xxs text-muted">{time}</span>
+            <span className="text-label text-sub">{authorName || 'Student'} • {role || 'Student'}</span>
+            <span className="text-xxs text-muted">{time || ''}</span>
           </div>
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-primary font-semibold cursor-pointer hover:text-brand" onClick={() => setExpanded(!expanded)}>
@@ -72,16 +105,42 @@ function Question({ author, role, title, text, time, tags, replies, votes, isFor
             onClick={() => setExpanded(!expanded)}
             className="text-xxs text-muted hover:text-brand font-semibold transition-colors"
           >
-            {expanded ? 'Hide replies' : `View ${replies} replies`}
+            {expanded ? 'Hide replies' : `View ${qdoc.replyCount || replies.length} replies`}
           </button>
         </div>
       </div>
       
       {expanded && (
         <div className="ml-12 pl-4 border-l-2 border-line space-y-3 mt-2">
-          <button className="text-xs font-semibold text-brand hover:text-brand-hover bg-brand/5 px-3 py-1.5 rounded-lg w-full text-left transition-colors">
-            + Add a reply...
-          </button>
+          {replies.map(r => (
+            <div key={r.id} className="bg-surface p-3 rounded-md">
+              <div className="text-xxs text-muted">{r.authorName || (r.anonymous ? 'Anonymous' : 'Student')} • {r.createdAt?.toDate ? r.createdAt.toDate().toLocaleString() : ''}</div>
+              <div className="mt-1 text-sm">{r.text}</div>
+            </div>
+          ))}
+
+          {replying ? (
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              if (!replyText.trim()) return
+              try {
+                await addQuestionReply(id, { text: replyText.trim(), authorName: user?.displayName, authorId: user?.uid, anonymous: false })
+                setReplyText('')
+                setReplying(false)
+              } catch (e) {
+                console.error('reply failed', e)
+                alert('Failed to post reply')
+              }
+            }}>
+              <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} className="w-full rounded-btn border border-line p-2" rows={3} />
+              <div className="flex justify-end gap-2 mt-2">
+                <button type="button" onClick={() => { setReplying(false); setReplyText('') }} className="px-3 py-1 rounded-btn border">Cancel</button>
+                <button type="submit" className="px-3 py-1 rounded-btn bg-brand text-white">Reply</button>
+              </div>
+            </form>
+          ) : (
+            <button onClick={() => setReplying(true)} className="text-xs font-semibold text-brand hover:text-brand-hover bg-brand/5 px-3 py-1.5 rounded-lg w-full text-left transition-colors">+ Add a reply...</button>
+          )}
         </div>
       )}
     </div>
@@ -98,6 +157,7 @@ function QAndA({ isMentorView = false }) {
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeTopic, setActiveTopic] = useState(null);
   const [questions, setQuestions] = useState([])
+  const [answeredQuestionIds, setAnsweredQuestionIds] = useState([])
 
   const scrollAmount = 320;
 
@@ -193,13 +253,30 @@ function QAndA({ isMentorView = false }) {
   ];
 
   useEffect(() => {
-    const unsub = subscribeToQuestions((items) => {
-      setQuestions(items)
-    })
-    return () => unsub()
+    let unsub = null
+    try {
+      unsub = subscribeToQuestions((items) => setQuestions(items))
+    } catch (e) {
+      console.warn('subscribeToQuestions failed:', e.message)
+    }
+    return () => { try { unsub?.() } catch (_) {} }
   }, [])
 
-  const displayedQuestions = isMentorView ? questions.filter(q => q.isForUpperclassmen) : questions
+  // subscribe to replies authored by current user so we can filter "Questions I Answered"
+  useEffect(() => {
+    let unsub = null
+    try {
+      unsub = subscribeRepliesByUser(user?.uid, (ids) => setAnsweredQuestionIds(ids))
+    } catch (e) {
+      console.warn('subscribeRepliesByUser failed:', e.message)
+    }
+    return () => { try { unsub?.() } catch (_) {} }
+  }, [user?.uid])
+
+  let displayedQuestions = isMentorView ? questions.filter(q => q.isForUpperclassmen) : questions
+  if (activeFilter === 'Questions I Answered') {
+    displayedQuestions = displayedQuestions.filter(q => answeredQuestionIds.includes(q.id))
+  }
 
   return (
     <div className="relative flex-1 overflow-hidden p-6">
@@ -261,15 +338,8 @@ function QAndA({ isMentorView = false }) {
         {displayedQuestions.map((q) => (
           <Question
             key={q.id}
-            author={q.author}
-            role={q.role}
-            title={q.title}
-            text={q.text}
-            time={q.time}
-            tags={q.tags}
-            replies={q.replies}
-            votes={q.votes}
-            isForUpperclassmen={q.isForUpperclassmen}
+            qdoc={q}
+            isMentorView={isMentorView}
           />
         ))}
       </div>

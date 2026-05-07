@@ -38,17 +38,8 @@ function ChatMessage({ message, isOwn }) {
 }
 
 export default function SessionChat({ session, onBack }) {
-  const mockMessages = [
-    { id: 1, author: session.attendees[0]?.name || 'M. Smith',   authorInitials: session.attendees[0]?.initials || 'MS', authorColor: session.attendees[0]?.color || 'purple', text: `Hey everyone! Just confirmed the room booking for ${session.location} 🎉`, time: '5:12 PM', isOwn: false },
-    { id: 2, author: session.attendees[1]?.name || 'Alex I.',    authorInitials: session.attendees[1]?.initials || 'AI', authorColor: session.attendees[1]?.color || 'teal',   text: 'Awesome, I\'ll bring my notes from lecture 8 and 9. Should we start with BFS or DFS problems first?', time: '5:15 PM', isOwn: false },
-    { id: 3, author: 'You', authorInitials: 'UN', authorColor: 'purple', text: 'Let\'s do BFS first since it showed up more on the practice midterm.', time: '5:18 PM', isOwn: true },
-    { id: 4, author: session.attendees[2]?.name || 'J. Kim',     authorInitials: session.attendees[2]?.initials || 'JK', authorColor: session.attendees[2]?.color || 'orange', text: 'Agreed! Also can we go over the time complexity proofs? I keep mixing up O(V+E) vs O(V²)', time: '5:20 PM', isOwn: false },
-    { id: 5, author: 'You', authorInitials: 'UN', authorColor: 'purple', text: 'Yeah for sure, that\'ll definitely be on the midterm lol', time: '5:21 PM', isOwn: true },
-    { id: 6, author: session.attendees[3]?.name || 'P. Wong',    authorInitials: session.attendees[3]?.initials || 'PW', authorColor: session.attendees[3]?.color || 'green',  text: 'I found a great LeetCode list for tree traversal. Sending it here: [Tree Problems - LeetCode Set]', time: '5:30 PM', isOwn: false },
-    { id: 7, author: session.attendees[0]?.name || 'M. Smith',   authorInitials: session.attendees[0]?.initials || 'MS', authorColor: session.attendees[0]?.color || 'purple', text: `See you all Thursday at 6! 📚`, time: '5:45 PM', isOwn: false },
-  ]
-
-  const [messages, setMessages] = useState(mockMessages)
+  // Chat placeholders removed — start with an empty message list
+  const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const bottomRef = useRef(null)
 

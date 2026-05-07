@@ -17,15 +17,22 @@ export default function ResourcesPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    const q = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const resourcesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setResources(resourcesData);
-    });
-    return () => unsubscribe();
+    let unsubscribe = null
+    try {
+      const q = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const resourcesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setResources(resourcesData);
+      }, (err) => {
+        console.warn('resources snapshot error:', err.code, err.message)
+      });
+    } catch (e) {
+      console.warn('resources onSnapshot failed:', e.message)
+    }
+    return () => { try { unsubscribe?.() } catch (_) {} }
   }, []);
 
   const handleFileSelect = (e) => {

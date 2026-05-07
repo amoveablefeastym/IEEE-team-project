@@ -1,15 +1,16 @@
 import { useAuth } from './context/AuthContext';
+import { useClasses } from './context/ClassesContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function DashboardOverview() {
   const { user } = useAuth();
+  const { classes, setActiveClass } = useClasses();
   const navigate = useNavigate();
 
-  const classes = [
-    { code: 'CS 214', name: 'Data Structures & Algorithms', color: 'bg-blue-100 text-blue-700' },
-    { code: 'CS 349', name: 'Machine Learning', color: 'bg-purple-100 text-purple-700' },
-    { code: 'MATH 330', name: 'Abstract Algebra', color: 'bg-green-100 text-green-700' },
-  ];
+  const handleClassClick = (cls) => {
+    setActiveClass(cls);
+    navigate('/chat');
+  };
 
   const upcomingSessions = [
     { id: 1, title: 'Midterm Prep – Trees & Graphs', time: 'Today, 6:00 PM', attendees: 4 },
@@ -50,15 +51,15 @@ export default function DashboardOverview() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {classes.map((cls) => (
                 <div 
-                  key={cls.code} 
-                  onClick={() => navigate('/chat')}
+                  key={cls.id || cls.code} 
+                  onClick={() => handleClassClick(cls)}
                   className="bg-surface border border-line rounded-xl p-5 hover:border-brand hover:shadow-sm transition-all cursor-pointer group"
                 >
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${cls.color}`}>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${cls.color || 'bg-brand/10 text-brand'}`}>
                     {cls.code}
                   </span>
                   <h3 className="text-lg font-bold text-primary mb-1 group-hover:text-brand transition-colors">
-                    {cls.name}
+                    {cls.title || cls.name}
                   </h3>
                   <div className="flex items-center gap-4 text-xs text-muted mt-4">
                     <span className="flex items-center gap-1">124 Peers</span>

@@ -6,7 +6,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
-  const { classes, removeClass } = useClasses()
+  const { classes, removeClass, activeClass, setActiveClass } = useClasses()
   
   const handleLogout = async () => {
     try {
@@ -64,13 +64,13 @@ export default function Sidebar() {
             </li>
           ) : (
             classes.map((c) => {
-              const inClassRoute = ['/chat', '/qa', '/study', '/mentorship'].includes(location.pathname)
+              const isActive = activeClass?.id === c.id
               return (
                 <li
                   key={c.id}
-                  onClick={() => navigate('/chat')}
+                  onClick={() => { setActiveClass(c); navigate('/chat') }}
                   className={`group flex items-center justify-between px-2 py-1.5 rounded-btn text-label cursor-pointer transition-colors ${
-                    inClassRoute ? 'text-sub hover:bg-page hover:text-primary' : 'text-sub hover:bg-page hover:text-primary'
+                    isActive ? 'bg-brand/10 text-brand font-semibold' : 'text-sub hover:bg-page hover:text-primary'
                   }`}
                   title={c.title}
                 >
