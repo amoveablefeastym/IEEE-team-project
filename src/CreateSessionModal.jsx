@@ -1,37 +1,11 @@
 import { useState } from 'react'
 
-const MEMBERS = [
-  { initials: 'MS', name: 'M. Smith',   color: 'purple' },
-  { initials: 'AI', name: 'Alex I.',    color: 'teal'   },
-  { initials: 'JK', name: 'J. Kim',     color: 'orange' },
-  { initials: 'PW', name: 'P. Wong',    color: 'green'  },
-  { initials: 'JL', name: 'Jordan Lee', color: 'blue'   },
-  { initials: 'RK', name: 'R. Kim',     color: 'pink'   },
-]
-
-const AVATAR_COLORS = {
-  purple: 'bg-brand text-white',
-  teal:   'bg-teal-500 text-white',
-  green:  'bg-green-500 text-white',
-  orange: 'bg-orange-400 text-white',
-  pink:   'bg-pink-500 text-white',
-  blue:   'bg-blue-500 text-white',
-}
-
-function Avatar({ initials, color, size = 'md' }) {
-  const sizes = { sm: 'w-7 h-7 text-xxs', md: 'w-9 h-9 text-xxs' }
-  return (
-    <div className={`rounded-avatar font-bold flex items-center justify-center flex-shrink-0 ${sizes[size]} ${AVATAR_COLORS[color] || AVATAR_COLORS.purple}`}>
-      {initials}
-    </div>
-  )
-}
 
 export default function CreateSessionModal({ onClose, onCreate }) {
   const [name, setName]                 = useState('')
   const [description, setDescription]   = useState('')
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [selected, setSelected]         = useState([])
+  const [inviteInput, setInviteInput]   = useState('')
+  const [invited, setInvited]           = useState([])
   const [date, setDate]                 = useState('')
   const [startTime, setStartTime]       = useState('')
   const [endTime, setEndTime]           = useState('')
@@ -52,19 +26,21 @@ export default function CreateSessionModal({ onClose, onCreate }) {
     setTopics(prev => prev.filter(x => x !== t))
   }
 
-  function toggleMember(member) {
-    setSelected(prev =>
-      prev.find(m => m.initials === member.initials)
-        ? prev.filter(m => m.initials !== member.initials)
-        : [...prev, member]
-    )
+  function addInvite() {
+    const val = inviteInput.trim()
+    if (val && !invited.includes(val)) setInvited(prev => [...prev, val])
+    setInviteInput('')
+  }
+
+  function removeInvite(val) {
+    setInvited(prev => prev.filter(x => x !== val))
   }
 
   function handleCreate() {
     if (!name.trim()) return
     const formattedDate = date ? new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : 'TBD'
     const formattedTime = startTime && endTime ? `${startTime} – ${endTime}` : 'TBD'
-    onCreate({ name, description, participants: selected, date: formattedDate, time: formattedTime, location: location || 'TBD', topics })
+    onCreate({ name, description, participants: invited, date: formattedDate, time: formattedTime, location: location || 'TBD', topics })
     onClose()
   }
 
@@ -114,48 +90,22 @@ export default function CreateSessionModal({ onClose, onCreate }) {
           {/* Invite participants */}
           <div className="px-4 mt-5">
             <p className="text-xxs text-muted font-semibold uppercase tracking-widest mb-2">Invite Participants</p>
-            <div className="bg-surface rounded-card border border-line overflow-hidden">
-              <button
-                onClick={() => setDropdownOpen(o => !o)}
-                className="w-full flex items-center justify-between px-4 py-3 text-sm text-sub hover:bg-page transition-colors"
-              >
-                <span>
-                  {selected.length === 0
-                    ? 'Select participants...'
-                    : selected.map(m => m.name).join(', ')
-                  }
-                </span>
-                <span className={`text-muted transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}>⌄</span>
-              </button>
-
-              {dropdownOpen && (
-                <div className="border-t border-line">
-                  {MEMBERS.map(member => (
-                    <label
-                      key={member.initials}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-page cursor-pointer transition-colors"
-                    >
-                      <Avatar initials={member.initials} color={member.color} size="sm" />
-                      <span className="flex-1 text-label text-primary">{member.name}</span>
-                      <input
-                        type="checkbox"
-                        checked={!!selected.find(m => m.initials === member.initials)}
-                        onChange={() => toggleMember(member)}
-                        className="accent-brand w-4 h-4"
-                      />
-                    </label>
-                  ))}
-                </div>
-              )}
+            <div className="flex gap-2">
+              <input
+                value={inviteInput}
+                onChange={(e) => setInviteInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addInvite() } }}
+                className="flex-1 bg-surface rounded-card border border-line px-4 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-brand"
+                placeholder="Enter name or email..."
+              />
+              <button type="button" onClick={addInvite} className="px-3 py-2 rounded-btn border border-line text-sm text-sub hover:border-brand hover:text-brand">Add</button>
             </div>
-
-            {/* Selected chips */}
-            {selected.length > 0 && (
+            {invited.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {selected.map(m => (
-                  <span key={m.initials} className="flex items-center gap-1 bg-brand-light text-brand text-xxs font-medium px-2 py-0.5 rounded-badge">
-                    {m.name}
-                    <button onClick={() => toggleMember(m)} className="hover:text-brand-hover leading-none">×</button>
+                {invited.map(val => (
+                  <span key={val} className="flex items-center gap-1 bg-brand-light text-brand text-xxs font-medium px-2 py-0.5 rounded-badge">
+                    {val}
+                    <button type="button" onClick={() => removeInvite(val)} className="hover:text-brand-hover leading-none">×</button>
                   </span>
                 ))}
               </div>

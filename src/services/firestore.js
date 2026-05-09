@@ -256,3 +256,26 @@ export async function sendSessionMessage(classId, sessionId, { text, authorName,
     createdAt: serverTimestamp(),
   })
 }
+
+// -- Class members --
+
+export async function registerMember(classId, { uid, displayName, email }) {
+  if (!classId || !uid) return
+  const ref = doc(db, `classes/${classId}/members`, uid)
+  await setDoc(ref, {
+    uid,
+    displayName: displayName || 'Anonymous',
+    email: email || null,
+    lastSeen: serverTimestamp(),
+  }, { merge: true })
+}
+
+export function subscribeToMembers(classId, onUpdate) {
+  if (!classId) { onUpdate([]); return () => {} }
+  const q = query(collection(db, `classes/${classId}/members`), orderBy('displayName', 'asc'))
+  return onSnapshot(
+    q,
+    (snap) => onUpdate(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    (err) => console.warn(`classes/${classId}/members snapshot error:`, err.code, err.message)
+  )
+}

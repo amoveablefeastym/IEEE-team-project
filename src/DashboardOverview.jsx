@@ -46,10 +46,6 @@ export default function DashboardOverview() {
               <h3 className="text-lg font-bold text-primary mb-1 group-hover:text-brand transition-colors">
                 {cls.title || cls.name}
               </h3>
-              <div className="flex items-center gap-4 text-xs text-muted mt-4">
-                <span className="flex items-center gap-1">124 Peers</span>
-                <span className="flex items-center gap-1">3 Active Q&A</span>
-              </div>
             </div>
           ))}
         </div>

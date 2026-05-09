@@ -113,9 +113,6 @@ function SessionCard({ session, onOpen, onJoin, joining }) {
               <Avatar key={a.initials} initials={a.initials} color={a.color} />
             ))}
           </div>
-          {spotsLeft > 0 && (
-            <span className="text-xxs text-muted ml-2">+{spotsLeft} more</span>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xxs text-muted">{spotsFilled}/{spotsTotal} spots</span>

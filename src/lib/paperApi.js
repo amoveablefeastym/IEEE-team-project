@@ -17,8 +17,8 @@
  * Day code legend: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri.
  */
 
-const DATA_INFO_URL = 'https://api-legacy.dilanxd.com/paper/data'
-const TERM_DATA_URL = (termId) => `https://cdn.dil.sh/paper-data/${termId}.json`
+const DATA_INFO_URL = 'https://us-central1-ieee-studyspace.cloudfunctions.net/paperDataProxy'
+const TERM_DATA_URL = (termId) => `https://us-central1-ieee-studyspace.cloudfunctions.net/paperTermProxy/${termId}`
 
 // Bump SCHEMA_VERSION whenever the normalized course shape changes — old caches
 // become invalid automatically and refetch on next modal open.

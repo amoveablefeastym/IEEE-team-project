@@ -156,9 +156,10 @@ function QAndA({ isMentorView = false }) {
   const [questionTitle, setQuestionTitle] = useState('');
   const [questionBody, setQuestionBody] = useState('');
   const [askUpperclassmen, setAskUpperclassmen] = useState(false);
+  const [modalTags, setModalTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
-  const [activeTopic, setActiveTopic] = useState(null);
-  const [questions, setQuestions] = useState([])
+  const [questions, setQuestions] = useState([]);
   const [answeredQuestionIds, setAnsweredQuestionIds] = useState([])
 
   const scrollAmount = 320;
@@ -172,7 +173,15 @@ function QAndA({ isMentorView = false }) {
   };
 
   const openModal = () => setShowModal(true);
-  const closeModal = () => setShowModal(false);
+  const closeModal = () => { setShowModal(false); setModalTags([]); setTagInput(''); };
+
+  const addTag = () => {
+    const t = tagInput.trim().toLowerCase().replace(/\s+/g, '_')
+    if (t && !modalTags.includes(t)) setModalTags((prev) => [...prev, t])
+    setTagInput('')
+  };
+
+  const removeTag = (t) => setModalTags((prev) => prev.filter((x) => x !== t));
 
   const submitQuestion = (event) => {
     event.preventDefault();
@@ -183,17 +192,21 @@ function QAndA({ isMentorView = false }) {
       authorName: user?.displayName || 'Anonymous',
       authorId: user?.uid || null,
       isForUpperclassmen: askUpperclassmen,
-      tags: activeTopic ? [activeTopic] : [],
+      tags: modalTags,
     }).then(() => {
       setQuestionTitle('')
       setQuestionBody('')
       setAskUpperclassmen(false)
+      setModalTags([])
+      setTagInput('')
       setShowModal(false)
     }).catch((e) => {
       console.error('postQuestion failed', e)
       setQuestionTitle('')
       setQuestionBody('')
       setAskUpperclassmen(false)
+      setModalTags([])
+      setTagInput('')
       setShowModal(false)
     })
   };
@@ -327,18 +340,6 @@ function QAndA({ isMentorView = false }) {
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {(isMentorView ? ['exam_prep', 'general', 'structs', 'quiz'] : ['loops', 'conditionals', 'functions', 'arrays', 'objects', 'recursion']).map((tag) => (
-            <button 
-              key={tag} 
-              onClick={() => setActiveTopic(activeTopic === tag ? null : tag)} 
-              className="transition-transform active:scale-95"
-            >
-              <Tag label={tag} isActive={activeTopic === tag} />
-            </button>
-          ))}
-        </div>
-
         {displayedQuestions.map((q) => (
           <Question
             key={q.id}
@@ -401,6 +402,30 @@ function QAndA({ isMentorView = false }) {
                 />
               </label>
               
+              <div className="block text-sm font-medium text-sub">
+                Tags <span className="text-muted font-normal">(optional)</span>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                    className="flex-1 rounded-btn border border-line bg-surface px-3 py-2 text-sm text-primary focus:border-brand focus:outline-none"
+                    placeholder="e.g. loops, recursion, A3"
+                  />
+                  <button type="button" onClick={addTag} className="px-3 py-2 rounded-btn border border-line text-sm text-sub hover:border-brand hover:text-brand">Add</button>
+                </div>
+                {modalTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {modalTags.map((t) => (
+                      <span key={t} className="inline-flex items-center gap-1 bg-brand-light text-brand text-xs font-medium px-2 py-0.5 rounded-badge">
+                        #{t}
+                        <button type="button" onClick={() => removeTag(t)} className="text-brand/60 hover:text-brand ml-0.5">✕</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <label className="flex items-center gap-2 mt-2 cursor-pointer bg-brand-light p-3 rounded-lg border border-brand/20">
                 <input 
                   type="checkbox" 

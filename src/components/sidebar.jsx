@@ -1,12 +1,22 @@
+import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useClasses } from '../context/ClassesContext'
+import { registerMember } from '../services/firestore'
 
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
   const { classes, removeClass, activeClass, setActiveClass } = useClasses()
+  useEffect(() => {
+    if (!user || !activeClass?.id) return
+    registerMember(activeClass.id, {
+      uid: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+    })
+  }, [user, activeClass?.id])
   
   const handleLogout = async () => {
     try {
@@ -105,7 +115,6 @@ export default function Sidebar() {
             }`}
           >
             <div className="flex items-center gap-2">
-              <span className="text-brand">🎓</span>
               <span>CS 111</span>
             </div>
           </li>
